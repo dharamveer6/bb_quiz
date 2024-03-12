@@ -4,7 +4,8 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 require('./db')
-const cors = require("cors")
+const cors = require("cors");
+const { categoryRoute } = require('./routes/categoryRoute');
  
 const app = express();
 
@@ -18,6 +19,12 @@ const limiter = rateLimit({
 app.use(limiter)
 app.use(express.json({ limit:'5mb' }));
 app.use('/', express.static(path.join(__dirname, 'public')));
+
+
+
+
+app.use('/category',categoryRoute);
+
 
 
 
