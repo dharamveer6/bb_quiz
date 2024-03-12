@@ -73,6 +73,7 @@ var addCategory = async(req,res,next)=>{
     
     // chnges
     // console.log(newCategory._id)
+    // haihaiiha
 
     res.json({
         status:1,
