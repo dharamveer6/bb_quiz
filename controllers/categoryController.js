@@ -120,12 +120,38 @@ var view_sub_category=async(req,res,next)=>{
     }));
 
     // Send response
-    res.json(subCategoriesData);
+    res.json({
+        status:1,
+        data:subCategoriesData
+    });
+}
+
+var view_category = async(req,res,next)=>{
+    const categories = await Category.find({}, 'category_name');
+
+    // Iterate through categories and find their associated sub-categories
+    const categoriesWithSubCategories = await Promise.all(categories.map(async (category) => {
+        const subCategories = await SubCategory.find({ cat_id: category._id }, 'sub_category_name');
+        console.log(category.category_name)
+        console.log( subCategories.map(subCategory => subCategory.sub_category_name))
+        return {
+            category_name: category.category_name,
+            sub_categories: subCategories.map(subCategory => subCategory.sub_category_name)
+        };
+    }));
+
+    res.json({
+        status: 1,
+        categories: categoriesWithSubCategories
+    });
+
 }
 
 
 addCategory = trycatch(addCategory)
 addsubcategory = trycatch(addsubcategory)
 view_sub_category = trycatch(view_sub_category)
+view_category = trycatch(view_category)
 
-module.exports={addsubcategory,view_sub_category,addCategory}
+
+module.exports={addsubcategory,view_sub_category,addCategory,view_category}
