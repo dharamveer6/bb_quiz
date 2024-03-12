@@ -87,6 +87,7 @@ var addCategory = async (req, res, next) => {
 var addsubcategory = async (req, res, next) => {
 
     const schema = Joi.object({
+        category_name: Joi.string().max(50).required(),
         sub_category_name: Joi.string().max(50).required(),
 
     });
@@ -94,11 +95,24 @@ var addsubcategory = async (req, res, next) => {
     const { error } = await schema.validateAsync(req.body);
 
 
-    const { sub_category_name } = req.body
+    const { category_name ,sub_category_name } = req.body
+
+    // Check if the category exists
+    const category = await Category.findOne({ category_name });
+    if (!category) {
+        throw new CreateError("CustomError", "The specified category does not exist.");
+    }
+
+    // Check if the sub-category already exists for this category
+    const existingSubCategory = await SubCategory.findOne({ sub_category_name, cat_id: category._id });
+    if (existingSubCategory) {
+        throw new CreateError("CustomError", "The sub-category already exists under this category.");
+    }
 
     // Create a new sub-category
     const newSubCategory = new SubCategory({
-        sub_category_name: sub_category_name
+        sub_category_name: sub_category_name,
+        cat_id: category._id
     });
 
     // Save the updated category
