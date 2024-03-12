@@ -6,7 +6,7 @@ const Category = require('../models/categorymodel');
 const { default: mongoose } = require('mongoose');
 
 
-var addCategory = async(req,res,next)=>{
+var addCategory = async (req, res, next) => {
 
     const schema = Joi.object({
         category_name: Joi.string().max(50).required(),
@@ -18,25 +18,25 @@ var addCategory = async(req,res,next)=>{
 
     const { error } = await schema.validateAsync(req.body);
 
-    const {category_name , sub_categories} = req.body;
+    const { category_name, sub_categories } = req.body;
 
 
-//     const newCategory = new Category({
-//         category_name: category_name
-//     });
+    //     const newCategory = new Category({
+    //         category_name: category_name
+    //     });
 
-//    await newCategory.save();
-//     const categoryId = newCategory._id;
+    //    await newCategory.save();
+    //     const categoryId = newCategory._id;
 
-//     for(i of sub_categories){
-//         console.log(i)
-//         console.log(categoryId)
+    //     for(i of sub_categories){
+    //         console.log(i)
+    //         console.log(categoryId)
 
-//         const subcat=new SubCategory({sub_category_name:i,cat_id:categoryId})
+    //         const subcat=new SubCategory({sub_category_name:i,cat_id:categoryId})
 
-//        await subcat.save()
+    //        await subcat.save()
 
-//     }
+    //     }
 
     // Check if the category already exists
     let category = await Category.findOne({ category_name });
@@ -57,7 +57,7 @@ var addCategory = async(req,res,next)=>{
     // Handle sub-categories
     for (const sub_category_name of sub_categories) {
         if (uniqueSubCategories.has(sub_category_name)) {
-            throw new CreateError("CustomError","sub_category_name must be unique")
+            throw new CreateError("CustomError", "sub_category_name must be unique")
         }
         uniqueSubCategories.add(sub_category_name);
 
@@ -70,20 +70,20 @@ var addCategory = async(req,res,next)=>{
         }
     }
 
-    
+
 
     // console.log(newCategory._id)
 
     res.json({
-        status:1,
-        message:"Category added successfully"
+        status: 1,
+        message: "Category added successfully"
     })
-    
+
 
 
 }
 
-var addsubcategory = async(req,res,next)=>{
+var addsubcategory = async (req, res, next) => {
 
     const schema = Joi.object({
         sub_category_name: Joi.string().max(50).required(),
@@ -91,49 +91,76 @@ var addsubcategory = async(req,res,next)=>{
     });
 
     const { error } = await schema.validateAsync(req.body);
-    
 
-   const {sub_category_name} = req.body
 
-        // Create a new sub-category
-        const newSubCategory = new SubCategory({
-            sub_category_name: sub_category_name
-        });
+    const { sub_category_name } = req.body
 
-        // Save the updated category
-        await newSubCategory.save();
+    // Create a new sub-category
+    const newSubCategory = new SubCategory({
+        sub_category_name: sub_category_name
+    });
 
-        res.json({ 
-            status:1,
-            message: "Sub-category added successfully" });
+    // Save the updated category
+    await newSubCategory.save();
+
+    res.json({
+        status: 1,
+        message: "Sub-category added successfully"
+    });
 
 }
 
 
-var view_sub_category=async(req,res,next)=>{
+var view_sub_category = async (req, res, next) => {
     const subCategories = await SubCategory.find({}, 'sub_category_name'); // Only retrieve the name field
 
     // Prepare response
     const subCategoriesData = subCategories.map(subCategory => ({
-      _id: subCategory._id,
-      name: subCategory.sub_category_name
+        _id: subCategory._id,
+        name: subCategory.sub_category_name
     }));
 
     // Send response
     res.json({
-        status:1,
-        data:subCategoriesData
+        status: 1,
+        data: subCategoriesData
     });
 }
 
-var view_category = async(req,res,next)=>{
-    const categories = await Category.find({}, 'category_name');
+var view_category = async (req, res, next) => {
+
+    const schema = Joi.object({
+        page: Joi.number().integer().allow(0).required(),
+        limit: Joi.number().integer().allow(0).required(),
+        search: Joi.string().max(50).allow('').required()
+    });
+
+    const { error } = await schema.validateAsync(req.query);
+
+    const { page, limit, search } = req.query;
+
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+    // Construct search filter
+    const searchFilter = search ? { category_name: { $regex: new RegExp(search, 'i') } } : {};
+
+
+    // Count total categories for pagination
+    const totalCategories = await Category.countDocuments(searchFilter);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalCategories / limit);
+
+    // Find categories with pagination and search filter
+    const categories = await Category.find(searchFilter, 'category_name')
+        .skip(skip)
+        .limit(limit);
 
     // Iterate through categories and find their associated sub-categories
     const categoriesWithSubCategories = await Promise.all(categories.map(async (category) => {
         const subCategories = await SubCategory.find({ cat_id: category._id }, 'sub_category_name');
         console.log(category.category_name)
-        console.log( subCategories.map(subCategory => subCategory.sub_category_name))
+        console.log(subCategories.map(subCategory => subCategory.sub_category_name))
         return {
             category_name: category.category_name,
             sub_categories: subCategories.map(subCategory => subCategory.sub_category_name)
@@ -142,7 +169,8 @@ var view_category = async(req,res,next)=>{
 
     res.json({
         status: 1,
-        categories: categoriesWithSubCategories
+        categories: categoriesWithSubCategories,
+        totalPages:totalPages
     });
 
 }
@@ -154,4 +182,4 @@ view_sub_category = trycatch(view_sub_category)
 view_category = trycatch(view_category)
 
 
-module.exports={addsubcategory,view_sub_category,addCategory,view_category}
+module.exports = { addsubcategory, view_sub_category, addCategory, view_category }
