@@ -25,7 +25,7 @@ app.use('/', express.static(path.join(__dirname, 'public')));
 
 app.use('/category',categoryRoute);
 
-
+// chnages made
 
 
 app.get("/check", async (req, res) => {
