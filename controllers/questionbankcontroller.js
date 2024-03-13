@@ -5,6 +5,7 @@ const Subject = require('../models/subjectmodel');
 const {moment}=require("../utils/timezone.js")
 const { connectToRabbitMQ } = require('../rabbit_config');
 const Question = require('../models/questionmodel');
+const exceljs=require("exceljs")
 
 var add_subject=async(req,res,next)=>{
     const schema = Joi.object({
@@ -171,6 +172,24 @@ var insert_single_question=async(req,res,next)=>{
     
       var {question,is_opt_img,topic_id,ans}=req.body
      is_opt_img=parseInt(is_opt_img)
+
+
+     var update_time=moment().valueOf()
+
+
+
+
+
+  
+
+
+
+
+     const subject = new Subject({
+                 ...req.body,update_time
+             });
+     
+            await subject.save();
   
       
   
@@ -339,6 +358,7 @@ var add_bulk_question=async(req,res,next)=>{
         // Iterate through rich text runs and concatenate the text
         cell.richText.forEach((richTextRun) => {
           plainText += richTextRun.text;
+       
         });
   
         if (!plainText) {
@@ -363,7 +383,8 @@ var add_bulk_question=async(req,res,next)=>{
   
   
   
-  
+  var repeat=0;
+  var unique=0;
   
   
    
@@ -433,6 +454,7 @@ var add_bulk_question=async(req,res,next)=>{
       // Iterate through rich text runs and concatenate the text
       cell.value.richText.forEach((richTextRun) => {
         plainText += richTextRun.text;
+        plainText=plainText.trim()
       });
   
       if (!plainText) {
@@ -455,6 +477,7 @@ var add_bulk_question=async(req,res,next)=>{
       } else {
   
         var val=cell.value.toString()
+        val=val.trim()
      
           data.push(val);
         
@@ -489,11 +512,24 @@ var add_bulk_question=async(req,res,next)=>{
   
         if(bulk_insert.length >= 1000){
   
-          const sen1=JSON.stringify(bulk_insert);
-          const channel=await consumeMessages();
+         
+            for(let i of bulk_insert){
+                const checking = await Question.findOne({...i,is_ques_img:0,is_opt_img:0});
+                if(checking){
+                    repeat++
+                }
+                else{
+
+                    const newquestions = new Question({...i,question_url:"",is_ques_img:0,is_opt_img:0});
+                    await newquestions.save();
+
+                    unique++
+                }
+            }
+
+
    
-      
-          channel.sendToQueue("store_prerec__question_excel", Buffer.from(sen1));
+     
   
          
       
@@ -510,21 +546,43 @@ var add_bulk_question=async(req,res,next)=>{
   
       if(bulk_insert.length!==0){
        
-  
-        const channel=await consumeMessages();
-  
-        const sen1=JSON.stringify(bulk_insert);
-    
-     
-        
-        channel.sendToQueue("store_prerec__question_excel", Buffer.from(sen1));
+        for(let i of bulk_insert){
+            const checking = await Question.findOne({...i,is_ques_img:0,is_opt_img:0});
+            if(checking){
+                repeat++
+            }
+            else{
+
+                const newquestions = new Question({...i,question_url:"",is_ques_img:0,is_opt_img:0});
+                await newquestions.save();
+
+                unique++
+            }
+        }
         bulk_insert=[]
       }
       
+
+      var update_time=moment().valueOf()
+
+
+
+
+
+  
+
+
+
+
+      const subject = new Subject({
+                  ...req.body,update_time
+              });
+      
+             await subject.save();
   
      
   
-      res.send({status:1,msg:"excel upload succesfully"})
+      res.send({status:1,repeat,unique,msg:"excel upload succesfully"})
   
 }
 
