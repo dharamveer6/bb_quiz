@@ -4,7 +4,7 @@ const { trycatch } = require("../utils/tryCatch");
 
 
 var get_public_data_from_azure=async(req,res,next)=>{
-    const blobname = req.query.blobname;
+    
    
   
     const schema = Joi.object({ 
@@ -14,10 +14,13 @@ var get_public_data_from_azure=async(req,res,next)=>{
     });
   
   
-    
+    const blobname = req.query.blobname;
     
     
     const { error } =  await schema.validateAsync({blobname});
+
+    console.log(blobname)
+    
   
     
 
