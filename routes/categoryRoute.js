@@ -13,5 +13,5 @@ categoryRoute.route('/add/subcategory').post(userAuthMiddleware,addsubcategory);
 categoryRoute.route('/view/subcategory').post(userAuthMiddleware,view_sub_category);
 
 
-
+// hiiii
 module.exports = {categoryRoute}
