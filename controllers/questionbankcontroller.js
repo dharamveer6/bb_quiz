@@ -74,7 +74,7 @@ var read_subjects=async(req,res,next)=>{
     const totalPages = Math.ceil(totalsubjects / limit);
 
     // Find categories with pagination and search filter
-    const categoriesWithSubCategories = await Subject.aggregate([
+    const categoriesWithSubCategories = await cat.aggregate([
         {
           $lookup: {
             from: "subcategories", // Assuming the name of the SubCategory collection is 'subcategories'
