@@ -7,6 +7,7 @@ require('./db')
 const cors = require("cors");
 const { categoryRoute } = require('./routes/categoryRoute');
 const { questionbankRoute } = require('./routes/questionbankroutes');
+const { connectToRabbitMQ } = require('./rabbit_config');
  
 const app = express();
 
