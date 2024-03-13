@@ -4,6 +4,7 @@ const { CreateError } = require('../utils/create_err');
 const SubCategory = require('../models/subcategorymodel');
 const Category = require('../models/categorymodel');
 const { default: mongoose } = require('mongoose');
+const { connectToRabbitMQ } = require('../rabbit_config');
 
 
 var addCategory = async (req, res, next) => {
@@ -19,6 +20,11 @@ var addCategory = async (req, res, next) => {
     const { error } = await schema.validateAsync(req.body);
 
     const { category_name, sub_categories } = req.body;
+
+    if(!req.file){
+        throw new CreateError("FileUploadError","image should not be empty")
+       }
+    
 
 
     //     const newCategory = new Category({
@@ -44,12 +50,30 @@ var addCategory = async (req, res, next) => {
 
     if (!category) {
         // If the category doesn't exist, create a new one
-        const newCategory = new Category({ category_name });
+        var file_access=req.file
+        
+    const blobName ="image/"+ Date.now()+ '-' + req.file.originalname;
+      
+   
+      
+   
+
+   
+    var channel=await connectToRabbitMQ()
+
+
+
+    const sen2=JSON.stringify({blobName,file_access})
+  
+   channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
+   const newCategory = new Category({ category_name,image:blobName });
+
+//    const new = new userModel({...req.body,resume:blobName});
         await newCategory.save();
         categoryId = newCategory._id;
     } else {
         // If the category exists, get its ID
-        categoryId = category._id;
+       throw new CreateError("ValidationError","Category already exists")
     }
 
     const uniqueSubCategories = new Set(); // Set to store unique sub-category names
@@ -143,7 +167,6 @@ var view_sub_category = async (req, res, next) => {
 }
 
 var view_category = async (req, res, next) => {
-
     const schema = Joi.object({
         page: Joi.number().integer().allow(0).required(),
         limit: Joi.number().integer().allow(0).required(),
@@ -167,17 +190,19 @@ var view_category = async (req, res, next) => {
     const totalPages = Math.ceil(totalCategories / limit);
 
     // Find categories with pagination and search filter
-    const categories = await Category.find(searchFilter, 'category_name')
+    const categories = await Category.find(searchFilter, 'category_name image')
         .skip(skip)
         .limit(limit);
 
     // Iterate through categories and find their associated sub-categories
     const categoriesWithSubCategories = await Promise.all(categories.map(async (category) => {
         const subCategories = await SubCategory.find({ cat_id: category._id }, 'sub_category_name');
-        console.log(category.category_name)
+        console.log(category)
         console.log(subCategories.map(subCategory => subCategory.sub_category_name))
+        console.log(category.image)
         return {
             category_name: category.category_name,
+            profile:`https://dvuser.brainbucks.in/quizmicro/stream/get/public?blobname=${category.image}` ,
             sub_categories: subCategories.map(subCategory => subCategory.sub_category_name)
         };
     }));
@@ -185,6 +210,7 @@ var view_category = async (req, res, next) => {
     res.json({
         status: 1,
         categories: categoriesWithSubCategories,
+        // profile:
         totalPages:totalPages
     });
 
