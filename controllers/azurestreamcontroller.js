@@ -19,7 +19,7 @@ var get_public_data_from_azure=async(req,res,next)=>{
     
     const { error } =  await schema.validateAsync({blobname});
 
-    console.log(blobname)
+    // console.log(blobname)
     
   
     
