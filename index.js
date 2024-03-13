@@ -6,6 +6,7 @@ require('dotenv').config();
 require('./db')
 const cors = require("cors");
 const { categoryRoute } = require('./routes/categoryRoute');
+const { questionbankRoute } = require('./routes/questionbankroutes');
  
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/', express.static(path.join(__dirname, 'public')));
 
 
 app.use('/category',categoryRoute);
+app.use('/questionbank',questionbankRoute);
 
 // chnages made
 
