@@ -76,7 +76,7 @@ var addCategory = async (req, res, next) => {
         // If the category exists, get its ID
         throw new CreateError("ValidationError", "Category already exists")
     }
-
+    // sidoas
     const uniqueSubCategories = new Set(); // Set to store unique sub-category names
 
     // Handle sub-categories
