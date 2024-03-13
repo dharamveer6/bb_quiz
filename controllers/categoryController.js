@@ -229,6 +229,7 @@ var view_category = async (req, res, next) => {
         {
             $project: {
                 category_name: 1, // Include category_name in the result
+                image:1,
                 subcategory_count: { $size: "$subcategories" } // Count the number of subcategories
             }
         },
