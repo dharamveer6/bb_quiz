@@ -152,7 +152,10 @@ var view_category = async (req, res, next) => {
 
     const { error } = await schema.validateAsync(req.query);
 
-    const { page, limit, search } = req.query;
+    var { page, limit, search } = req.query;
+
+    page=parseInt(page)
+    limit=parseInt(limit)
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit;
