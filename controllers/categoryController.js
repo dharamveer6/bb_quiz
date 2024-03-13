@@ -66,6 +66,7 @@ var addCategory = async (req, res, next) => {
         const sen2 = JSON.stringify({ blobName, file_access })
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
+
         const newCategory = new Category({ category_name, image: blobName });
 
         //    const new = new userModel({...req.body,resume:blobName});
