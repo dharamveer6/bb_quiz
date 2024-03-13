@@ -175,7 +175,10 @@ var view_category = async (req, res, next) => {
 
     const { error } = await schema.validateAsync(req.query);
 
-    const { page, limit, search } = req.query;
+    var { page, limit, search } = req.query;
+
+    page=parseInt(page)
+    limit=parseInt(limit)
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit;
@@ -190,22 +193,32 @@ var view_category = async (req, res, next) => {
     const totalPages = Math.ceil(totalCategories / limit);
 
     // Find categories with pagination and search filter
-    const categories = await Category.find(searchFilter, 'category_name image')
-        .skip(skip)
-        .limit(limit);
+    const categoriesWithSubCategories = await Category.aggregate([
+        {
+          $lookup: {
+            from: "subcategories", // Assuming the name of the SubCategory collection is 'subcategories'
+            localField: "_id", // Field from Subject collection
+            foreignField: "cat_id", // Field from SubCategory collection
+            as: "subcategories" // Name of the array field to store matching subcategories
+          }
+        },
+        {
+          $match: searchFilter // Apply the search filter
+        },
+        {
+          $project: {
+            category_name: 1, // Include category_name in the result
+            subcategory_count: { $size: "$subcategories" } // Count the number of subcategories
+          }
+        },
+        {
+          $skip: skip // Skip documents based on pagination
+        },
+        {
+          $limit: limit // Limit the number of documents based on pagination
+        }
+      ]);
 
-    // Iterate through categories and find their associated sub-categories
-    const categoriesWithSubCategories = await Promise.all(categories.map(async (category) => {
-        const subCategories = await SubCategory.find({ cat_id: category._id }, 'sub_category_name');
-        console.log(category)
-        console.log(subCategories.map(subCategory => subCategory.sub_category_name))
-        console.log(category.image)
-        return {
-            category_name: category.category_name,
-            profile:`https://dvuser.brainbucks.in/quizmicro/stream/get/public?blobname=${category.image}` ,
-            sub_categories: subCategories.map(subCategory => subCategory.sub_category_name)
-        };
-    }));
 
     res.json({
         status: 1,

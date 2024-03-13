@@ -6,9 +6,7 @@ require('dotenv').config();
 require('./db')
 const cors = require("cors");
 const { categoryRoute } = require('./routes/categoryRoute');
-const { azurestreamroute } = require('./routes/azurestreamroutes');
-const { connectToRabbitMQ } = require('./rabbit_config');
-const { formfillroutes } = require('./routes/formfillroutes');
+const { questionbankRoute } = require('./routes/questionbankroutes');
  
 const app = express();
 
@@ -28,8 +26,8 @@ connectToRabbitMQ()
 
 
 app.use('/category',categoryRoute);
-app.use('/stream',azurestreamroute)
-app.use('/formfill',formfillroutes)
+app.use('/questionbank',questionbankRoute);
+
 // chnages made
 
 
