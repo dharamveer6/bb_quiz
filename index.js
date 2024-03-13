@@ -8,6 +8,7 @@ const cors = require("cors");
 const { categoryRoute } = require('./routes/categoryRoute');
 const { azurestreamroute } = require('./routes/azurestreamroutes');
 const { connectToRabbitMQ } = require('./rabbit_config');
+const { formfillroutes } = require('./routes/formfillroutes');
  
 const app = express();
 
@@ -28,7 +29,7 @@ connectToRabbitMQ()
 
 app.use('/category',categoryRoute);
 app.use('/stream',azurestreamroute)
-
+app.use('/formfill',formfillroutes)
 // chnages made
 
 
