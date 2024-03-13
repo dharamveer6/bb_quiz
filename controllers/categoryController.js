@@ -26,24 +26,6 @@ var addCategory = async (req, res, next) => {
     }
 
 
-
-    //     const newCategory = new Category({
-    //         category_name: category_name
-    //     });
-
-    //    await newCategory.save();
-    //     const categoryId = newCategory._id;
-
-    //     for(i of sub_categories){
-    //         console.log(i)
-    //         console.log(categoryId)
-
-    //         const subcat=new SubCategory({sub_category_name:i,cat_id:categoryId})
-
-    //        await subcat.save()
-
-    //     }
-
     // Check if the category already exists
     let category = await Category.findOne({ category_name });
     let categoryId;
