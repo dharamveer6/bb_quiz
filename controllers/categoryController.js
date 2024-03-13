@@ -4,6 +4,7 @@ const { CreateError } = require('../utils/create_err');
 const SubCategory = require('../models/subcategorymodel');
 const Category = require('../models/categorymodel');
 const { default: mongoose } = require('mongoose');
+const { connectToRabbitMQ } = require('../rabbit_config');
 
 
 var addCategory = async (req, res, next) => {
@@ -19,6 +20,11 @@ var addCategory = async (req, res, next) => {
     const { error } = await schema.validateAsync(req.body);
 
     const { category_name, sub_categories } = req.body;
+
+    if (!req.file) {
+        throw new CreateError("FileUploadError", "image should not be empty")
+    }
+
 
 
     //     const newCategory = new Category({
@@ -44,14 +50,33 @@ var addCategory = async (req, res, next) => {
 
     if (!category) {
         // If the category doesn't exist, create a new one
-        const newCategory = new Category({ category_name });
+        var file_access = req.file
+
+        const blobName = "image/" + Date.now() + '-' + req.file.originalname;
+
+
+
+
+
+
+        var channel = await connectToRabbitMQ()
+
+
+
+        const sen2 = JSON.stringify({ blobName, file_access })
+
+        channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
+
+        const newCategory = new Category({ category_name, image: blobName });
+
+        //    const new = new userModel({...req.body,resume:blobName});
         await newCategory.save();
         categoryId = newCategory._id;
     } else {
         // If the category exists, get its ID
-        categoryId = category._id;
+        throw new CreateError("ValidationError", "Category already exists")
     }
-
+    // sidoas
     const uniqueSubCategories = new Set(); // Set to store unique sub-category names
 
     // Handle sub-categories
@@ -95,7 +120,7 @@ var addsubcategory = async (req, res, next) => {
     const { error } = await schema.validateAsync(req.body);
 
 
-    const { category_name ,sub_category_name } = req.body
+    const { category_name, sub_category_name } = req.body
 
     // Check if the category exists
     const category = await Category.findOne({ category_name });
@@ -127,14 +152,34 @@ var addsubcategory = async (req, res, next) => {
 
 
 var view_sub_category = async (req, res, next) => {
-    const subCategories = await SubCategory.find({}, 'sub_category_name'); // Only retrieve the name field
+    // res.json(0)
 
-    // Prepare response
-    const subCategoriesData = subCategories.map(subCategory => ({
-        _id: subCategory._id,
-        name: subCategory.sub_category_name
-    }));
+    const schema = Joi.object({
+        cat_id: Joi.string().max(50).required(),
 
+    });
+
+    const { error } = await schema.validateAsync(req.query);
+
+    const { cat_id } = req.query;
+
+    // Convert the cat_id string to a MongoDB ObjectId
+    const objectIdCatId = new mongoose.Types.ObjectId(cat_id);
+
+    console.log(objectIdCatId)
+
+    // Find sub-categories with the specified cat_id
+    const subCategoriesData = await SubCategory.aggregate([
+        {
+            $match: { cat_id: objectIdCatId } // Match documents with the specified cat_id
+        },
+        {
+            $project: {
+                _id: 1, // Include the _id field
+                name: '$sub_category_name' // Rename sub_category_name to name
+            }
+        }
+    ]);
     // Send response
     res.json({
         status: 1,
@@ -143,7 +188,6 @@ var view_sub_category = async (req, res, next) => {
 }
 
 var view_category = async (req, res, next) => {
-
     const schema = Joi.object({
         page: Joi.number().integer().allow(0).required(),
         limit: Joi.number().integer().allow(0).required(),
@@ -154,8 +198,8 @@ var view_category = async (req, res, next) => {
 
     var { page, limit, search } = req.query;
 
-    page=parseInt(page)
-    limit=parseInt(limit)
+    page = parseInt(page)
+    limit = parseInt(limit)
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit;
@@ -172,35 +216,37 @@ var view_category = async (req, res, next) => {
     // Find categories with pagination and search filter
     const categoriesWithSubCategories = await Category.aggregate([
         {
-          $lookup: {
-            from: "subcategories", // Assuming the name of the SubCategory collection is 'subcategories'
-            localField: "_id", // Field from Subject collection
-            foreignField: "cat_id", // Field from SubCategory collection
-            as: "subcategories" // Name of the array field to store matching subcategories
-          }
+            $lookup: {
+                from: "subcategories", // Assuming the name of the SubCategory collection is 'subcategories'
+                localField: "_id", // Field from Subject collection
+                foreignField: "cat_id", // Field from SubCategory collection
+                as: "subcategories" // Name of the array field to store matching subcategories
+            }
         },
         {
-          $match: searchFilter // Apply the search filter
+            $match: searchFilter // Apply the search filter
         },
         {
-          $project: {
-            category_name: 1, // Include category_name in the result
-            subcategory_count: { $size: "$subcategories" } // Count the number of subcategories
-          }
+            $project: {
+                category_name: 1, // Include category_name in the result
+                image_url: { $concat: ["https://dvuser.brainbucks.in/quizmicro/stream/get/public?blobname=", "$image"] },
+                subcategory_count: { $size: "$subcategories" } // Count the number of subcategories
+            }
         },
         {
-          $skip: skip // Skip documents based on pagination
+            $skip: skip // Skip documents based on pagination
         },
         {
-          $limit: limit // Limit the number of documents based on pagination
+            $limit: limit // Limit the number of documents based on pagination
         }
-      ]);
+    ]);
 
 
     res.json({
         status: 1,
         categories: categoriesWithSubCategories,
-        totalPages:totalPages
+        // profile:
+        totalPages: totalPages
     });
 
 }

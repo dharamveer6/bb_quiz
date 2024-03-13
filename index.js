@@ -7,9 +7,12 @@ require('./db')
 const cors = require("cors");
 const { categoryRoute } = require('./routes/categoryRoute');
 const { questionbankRoute } = require('./routes/questionbankroutes');
+const { connectToRabbitMQ } = require('./rabbit_config');
+const { azurestreamroute } = require('./routes/azurestreamroutes');
  
 const app = express();
 
+// hii
 
 app.use(cors());
 const limiter = rateLimit({
@@ -21,11 +24,13 @@ app.use(limiter)
 app.use(express.json({ limit:'5mb' }));
 app.use('/', express.static(path.join(__dirname, 'public')));
 
-
+connectToRabbitMQ()
 
 
 app.use('/category',categoryRoute);
 app.use('/questionbank',questionbankRoute);
+app.use('/stream',azurestreamroute)
+
 
 // chnages made
 
