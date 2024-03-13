@@ -229,7 +229,7 @@ var view_category = async (req, res, next) => {
         {
             $project: {
                 category_name: 1, // Include category_name in the result
-                image_url: { $concat: ["https://dvuser.brainbucks.in/stream/get/public?blobname=", "$image"] },
+                image_url: { $concat: ["https://dvuser.brainbucks.in/quizmicro/stream/get/public?blobname=", "$image"] },
                 subcategory_count: { $size: "$subcategories" } // Count the number of subcategories
             }
         },
