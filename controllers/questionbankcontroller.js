@@ -170,31 +170,24 @@ var insert_single_question=async(req,res,next)=>{
    const channel=await connectToRabbitMQ()
   
     
-      var {question,is_opt_img,topic_id,ans}=req.body
+      var {question,is_opt_img,sub_id,ans}=req.body
      is_opt_img=parseInt(is_opt_img)
 
-
-     var update_time=moment().valueOf()
-
-
-
-
-
-  
-
-
-
-
-     const subject = new Subject({
-                 ...req.body,update_time
-             });
      
-            await subject.save();
-  
+     var update_time=moment().valueOf()
+     
+     const subject = new Subject({
+       ...req.body,update_time
+      });
       
-  
+      await subject.save();
+      
+      
+      // return res.send(question)
+      
       if(is_opt_img && req.files['question_url']){
 
+        // let {question} = req.body
 
         var op1file_access = req.files['option1'][0]
         var op2file_access = req.files['option2'][0]
@@ -206,10 +199,10 @@ var insert_single_question=async(req,res,next)=>{
         const op3blobName = "image/" + Date.now() + '-' + req.files['option3'][0].originalname;
         const op4blobName = "image/" + Date.now() + '-' + req.files['option4'][0].originalname;
 
-        const sen1 = JSON.stringify({ op1blobName, op1file_access })
-        const sen2 = JSON.stringify({ op2blobName, op2file_access })
-        const sen3 = JSON.stringify({ op3blobName, op3file_access })
-        const sen4 = JSON.stringify({ op4blobName, op4file_access })
+        const sen1 = JSON.stringify({blobName: op1blobName,file_access: op1file_access })
+        const sen2 = JSON.stringify({blobName: op2blobName, file_access:op2file_access })
+        const sen3 = JSON.stringify({blobName: op3blobName, file_access:op3file_access })
+        const sen4 = JSON.stringify({blobName: op4blobName,file_access: op4file_access })
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen1));
         channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
@@ -220,16 +213,15 @@ var insert_single_question=async(req,res,next)=>{
         const qu1blobName = "image/" + Date.now() + '-' + req.files['question_url'][0].originalname;
         var qu1file_access = req.files['question_url'][0]
 
-        const sen11 = JSON.stringify({ qu1blobName, qu1file_access })
+        const sen11 = JSON.stringify({blobName: qu1blobName, file_access:qu1file_access })
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen11));
 
 
 
+        const newquestion = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:qu1blobName,ans});
 
-        const question = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:baseUrl+qu1blobName,ans});
-
-       await question.save();
+       await newquestion.save();
   
       
         return res.send({status:1,msg:"insert succesfully"})
@@ -239,14 +231,15 @@ var insert_single_question=async(req,res,next)=>{
 
         const op1blobName = "image/" + Date.now() + '-' + req.files['question_url'][0].originalname;
         var op1file_access = req.files['question_url'][0]
+        
 
-        const sen1 = JSON.stringify({ op1blobName, op1file_access })
+        const sen1 = JSON.stringify({ blobName:op1blobName, file_access:op1file_access })
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen1));
       
-        const question = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:req.body.option1,option2:req.body.option2,option3:req.body.option3,option4:req.body.option4,question_url:op1blobName,ans});
+        const newquestion = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:req.body.option1,option2:req.body.option2,option3:req.body.option3,option4:req.body.option4,question_url:op1blobName,ans});
 
-        await question.save();
+        await newquestion.save();
       
         return res.send({status:1,msg:"insert succesfully"})
       }
@@ -264,18 +257,18 @@ var insert_single_question=async(req,res,next)=>{
         const op3blobName = "image/" + Date.now() + '-' + req.files['option3'][0].originalname;
         const op4blobName = "image/" + Date.now() + '-' + req.files['option4'][0].originalname;
 
-        const sen1 = JSON.stringify({ op1blobName, op1file_access })
-        const sen2 = JSON.stringify({ op2blobName, op2file_access })
-        const sen3 = JSON.stringify({ op3blobName, op3file_access })
-        const sen4 = JSON.stringify({ op4blobName, op4file_access })
+        const sen1 = JSON.stringify({blobName: op1blobName, file_access:op1file_access })
+        const sen2 = JSON.stringify({blobName: op2blobName,file_access:op2file_access })
+        const sen3 = JSON.stringify({blobName: op3blobName, file_access:op3file_access })
+        const sen4 = JSON.stringify({blobName: op4blobName, file_access:op4file_access })
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen1));
         channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
         channel.sendToQueue("upload_public_azure", Buffer.from(sen3));
         channel.sendToQueue("upload_public_azure", Buffer.from(sen4));
-        const question = new Question({question,sub_id,is_ques_img:0,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:"",ans});
+        const newquestion = new Question({question,sub_id,is_ques_img:0,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:"",ans});
 
-        await question.save();
+        await newquestion.save();
       
       
         return res.send({status:1,msg:"insert succesfully"})
@@ -589,5 +582,6 @@ var add_bulk_question=async(req,res,next)=>{
 
 add_subject=trycatch(add_subject)
 view_subjects=trycatch(view_subjects)
+insert_single_question = trycatch(insert_single_question)
 
-module.exports={add_subject,view_subjects}
+module.exports={add_subject,view_subjects , insert_single_question}

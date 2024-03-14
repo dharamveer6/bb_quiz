@@ -18,7 +18,7 @@ const storage = multer.memoryStorage();
     ) {
       cb(null, true);
     } else {
-        cb(new CreateError("FileValError","Only pdf  are allowed"));
+        cb(new CreateError("FileValError","Only .png , .jpg , .jpeg  are allowed"));
     }
   };
   

@@ -37,6 +37,7 @@ var addCategory = async (req, res, next) => {
     if (!category) {
         // If the category doesn't exist, create a new one
         var file_access = req.file
+        console.log(file_access)
 
         const blobName = "image/" + Date.now() + '-' + req.file.originalname;
 
