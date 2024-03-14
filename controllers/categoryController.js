@@ -11,16 +11,20 @@ var addCategory = async (req, res, next) => {
 
     const schema = Joi.object({
         category_name: Joi.string().max(50).required(),
-        sub_categories: Joi.array().items(
-            Joi.string().max(50).required()
-        ).required(),
+        // sub_categories: Joi.array().items(
+        //     Joi.string().max(50).required()
+        // ).required(),
+        sub_categories: Joi.string().required()
 
     });
 
     const { error } = await schema.validateAsync(req.body);
 
-    const { category_name, sub_categories } = req.body;
+    const { sub_categories , category_name } = req.body;
+    // console.log(typeof(sub_categories))
 
+    sub_categories_array = JSON.parse(sub_categories)
+   
     if (!req.file) {
         throw new CreateError("FileUploadError", "image should not be empty")
     }
@@ -36,14 +40,7 @@ var addCategory = async (req, res, next) => {
 
         const blobName = "image/" + Date.now() + '-' + req.file.originalname;
 
-
-
-
-
-
         var channel = await connectToRabbitMQ()
-
-
 
         const sen2 = JSON.stringify({ blobName, file_access })
 
@@ -62,14 +59,19 @@ var addCategory = async (req, res, next) => {
     const uniqueSubCategories = new Set(); // Set to store unique sub-category names
 
     // Handle sub-categories
-    for (const sub_category_name of sub_categories) {
+    for (const sub_category_name of sub_categories_array) {
+
         if (uniqueSubCategories.has(sub_category_name)) {
+
             throw new CreateError("CustomError", "sub_category_name must be unique")
         }
+
+
         uniqueSubCategories.add(sub_category_name);
 
         // Check if the sub-category already exists for this category
         const existingSubCategory = await SubCategory.findOne({ sub_category_name, cat_id: categoryId });
+
         if (!existingSubCategory) {
             // If the sub-category doesn't exist, create a new one
             const newSubCategory = new SubCategory({ sub_category_name, cat_id: categoryId });
