@@ -231,7 +231,8 @@ var view_category = async (req, res, next) => {
         status: 1,
         categories: categoriesWithSubCategories,
         // profile:
-        totalPages: totalPages
+        totalPages: totalPages,
+        totalCategories:totalCategories
     });
 
 }
