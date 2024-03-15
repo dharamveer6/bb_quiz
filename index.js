@@ -2,13 +2,13 @@ const express = require('express');
 const path = require("path");
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-
 require('./db')
 const cors = require("cors");
 const { categoryRoute } = require('./routes/categoryRoute');
 const { questionbankRoute } = require('./routes/questionbankroutes');
 const { connectToRabbitMQ } = require('./rabbit_config');
 const { azurestreamroute } = require('./routes/azurestreamroutes');
+const { triviaRoute } = require('./routes/triviaQuizzRoutes');
  
 const app = express();
 
@@ -30,6 +30,7 @@ connectToRabbitMQ()
 app.use('/category',categoryRoute);
 app.use('/questionbank',questionbankRoute);
 app.use('/stream',azurestreamroute)
+app.use('/trivia',triviaRoute)
 
 
 // chnages made
