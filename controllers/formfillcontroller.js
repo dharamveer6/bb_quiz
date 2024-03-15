@@ -1,4 +1,3 @@
-const Joi = require("joi");
 const { CreateError } = require("../utils/create_err");
 const { trycatch } = require("../utils/tryCatch");
 const Category = require("../models/categorymodel");
