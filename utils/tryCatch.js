@@ -26,10 +26,7 @@ const trycatch = (controller) => {
         return res.send({ status:"VAL_ERR", Backend_Error:err.message });
       }
       // If the error is a transaction error
-     else if (err.name === 'TransactionError') {
-        // Send the transaction error message
-        return res.send({ status:"TXN_ERR", Backend_Error: err.message });
-      }
+ 
       else if (err.name === 'FileUploadError') {
         // Send the transaction error message
         return res.send({ status:"FILE_ERR", Backend_Error: err.message });

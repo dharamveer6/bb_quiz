@@ -8,8 +8,8 @@ const storage = multer.memoryStorage();
 
 
 
-  const imgFilter = (req, file, cb) => {
-    const allowedExtensions = [".jpg" , ".png" , ".jpeg"];
+  const exlFilter = (req, file, cb) => {
+    const allowedExtensions = [".xlsx",".xls"];
     const fileExtension = path.extname(file.originalname);
   
     if (
@@ -18,14 +18,14 @@ const storage = multer.memoryStorage();
     ) {
       cb(null, true);
     } else {
-        cb(new CreateError("FileUploadError","Only .png , .jpg , .jpeg  are allowed"));
+        cb(new CreateError("FileUploadError","Only excel  are allowed"));
     }
   };
   
   
-  const uploadimage = multer({
+  const uploadexcel = multer({
     storage: storage,
-    fileFilter: imgFilter // Add the file filter to the multer options
+    fileFilter: exlFilter // Add the file filter to the multer options
   });
   
-  module.exports={uploadimage};
+  module.exports={uploadexcel};

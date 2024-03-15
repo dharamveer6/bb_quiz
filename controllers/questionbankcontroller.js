@@ -5,7 +5,10 @@ const Subject = require('../models/subjectmodel');
 const {moment}=require("../utils/timezone.js")
 const { connectToRabbitMQ } = require('../rabbit_config');
 const Question = require('../models/questionmodel');
-const exceljs=require("exceljs")
+const exceljs=require("exceljs");
+const { default: mongoose } = require('mongoose');
+const SubCategory = require('../models/subcategorymodel.js');
+const Category = require('../models/categorymodel.js');
 
 var add_subject=async(req,res,next)=>{
     const schema = Joi.object({
@@ -18,9 +21,12 @@ var add_subject=async(req,res,next)=>{
     });
     const { error } = await schema.validateAsync(req.body);
 
-    const{sub_name,cat_id}=req.body
+    const{sub_name,cat_id,sub_cat_id}=req.body
 
-    let category = await Subject.findOne({sub_name,cat_id});
+  
+    
+
+    let category = await Subject.findOne({sub_name});
 
     if(category){
         throw new CreateError("CustomError", "subject name must be unique") 
@@ -132,6 +138,8 @@ var view_subjects=async(req,res,next)=>{
           $limit: limit // Limit the number of documents based on pagination
         }
       ]);
+
+      console.log(subjects)
 
 
       for(let i of subjects){
@@ -567,21 +575,192 @@ var add_bulk_question=async(req,res,next)=>{
 
 
 
-      const subject = new Subject({
-                  ...req.body,update_time
-              });
+      await Subject.updateOne({_id:new mongoose.Types.ObjectId(sub_id)}, {update_time});
       
-             await subject.save();
-  
+        
      
   
       res.send({status:1,repeat,unique,msg:"excel upload succesfully"})
   
 }
 
+var update_category_of_subject=async(req,res,next)=>{
+  const schema = Joi.object({
+    sub_id: Joi.string().max(150).required(),
+    cat_id:Joi.string().max(100).required(),
+    sub_cat_id: Joi.array().items(
+        Joi.string().max(100).required()
+    ).required(),
+
+});
+const { error } = await schema.validateAsync(req.body);
+
+const{sub_id,cat_id,sub_cat_id}=req.body
+var update_time=moment().valueOf()
+
+await Subject.updateOne({_id:new mongoose.Types.ObjectId(sub_id)}, {cat_id,sub_cat_id,update_time});
+
+
+
+
+
+
+
+
+
+
+
+       res.send({status:1,msg:"Subject create succesfully"})
+
+
+
+
+
+
+}
+var view_edit_page_for_subject=async(req,res,next)=>{
+  const schema = Joi.object({
+    sub_id: Joi.string().max(150).required(),
+   
+});
+const { error } = await schema.validateAsync(req.body);
+
+var {cat_id,sub_cat_id} = await Subject.findOne({_id:new mongoose.Types.ObjectId(req.body.sub_id)});
+
+console.log(cat_id,sub_cat_id)
+
+
+var sub_categories=await SubCategory.find({cat_id:cat_id});
+var {category_name}=await Category.findOne({_id:cat_id});
+
+console.log()
+var newategory=[]
+
+console.log(sub_categories)
+
+
+for(let i of sub_categories){
+ if(sub_cat_id.indexOf(i._id)!==-1){
+  console.log(i)
+
+  newategory.push({...i._doc,is_alot:1})
+  console.log("gome")
+  i["is_alot"]=1
+ }
+ else{
+
+  console.log("gone2")
+  i.is_alot=0
+  newategory.push({...i._doc,is_alot:0})
+  
+ }
+}
+
+res.send({status:1,category_name,newategory})
+
+
+}
+
+var delete_new_subcategory=async(req,res,next)=>{
+  const schema = Joi.object({
+    sub_id: Joi.string().max(150).required(),
+    
+    delete_sub_cat_id:Joi.string().max(150).required(),
+   
+});
+const { error } = await schema.validateAsync(req.body);
+   
+const {sub_id,delete_sub_cat_id}=req.body;
+
+
+
+
+// Update the document to remove the specified sub-category ID from the sub_cat_id array
+await Subject.updateOne(
+  { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where cat_id matches your_cat_id
+  { $pull: { sub_cat_id: new mongoose.Types.ObjectId(delete_sub_cat_id) } } // Pull the specified sub-category ID from the sub_cat_id array
+);
+
+
+return res.send({status:1,msg:"sub category delete successfully"})
+
+
+
+
+}
+
+
+var insert_new_subcategory=async(req,res,next)=>{
+  const schema = Joi.object({
+    sub_id: Joi.string().max(150).required(),
+    
+    add_sub_cat_id:Joi.string().max(150).required(),
+   
+});
+const { error } = await schema.validateAsync(req.body);
+   
+const {sub_id,add_sub_cat_id}=req.body;
+
+
+
+
+// Update the document to remove the specified sub-category ID from the sub_cat_id array
+await Subject.updateOne(
+  { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where cat_id matches your_cat_id
+  { $addToSet: { sub_cat_id: new mongoose.Types.ObjectId(add_sub_cat_id) } } // Pull the specified sub-category ID from the sub_cat_id array
+);
+
+
+return res.send({status:1,msg:"sub category insert successfully"})
+
+}
+
+var get_questions_in_subject=async(req,res,next)=>{
+  const schema = Joi.object({
+    sub_id: Joi.string().max(150).required(),
+
+});
+const { error } = await schema.validateAsync(req.body);
+   
+const {sub_id}=req.body;
+
+const questions=await Question.find({sub_id:new mongoose.Types.ObjectId(sub_id)});
+
+res.send({status:1,questions})
+}
+
+var del_question=async(req,res,next)=>{
+  const schema = Joi.object({
+    sub_id: Joi.string().max(150).required(),
+
+});
+const { error } = await schema.validateAsync(req.body);
+
+const {sub_id}=req.body
+
+await Question.updateOne({_id:new mongoose.Types.ObjectId},{is_del:1});
+
+res.send({status:1,msg:"question dlete succesfully"})
+}
+
+
+
+
+insert_new_subcategory=trycatch(insert_new_subcategory)
+delete_new_subcategory=trycatch(delete_new_subcategory)
+view_edit_page_for_subject=trycatch(view_edit_page_for_subject)
+update_category_of_subject=trycatch(update_category_of_subject)
+
+
+
+
+
+
 
 add_subject=trycatch(add_subject)
 view_subjects=trycatch(view_subjects)
-insert_single_question = trycatch(insert_single_question)
+insert_single_question = trycatch(insert_single_question);
+add_bulk_question=trycatch(add_bulk_question)
 
-module.exports={add_subject,view_subjects , insert_single_question}
+
+module.exports={add_subject,view_subjects , insert_single_question,add_bulk_question,update_category_of_subject,view_edit_page_for_subject,delete_new_subcategory,insert_new_subcategory}
