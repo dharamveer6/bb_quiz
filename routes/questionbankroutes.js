@@ -8,8 +8,8 @@ const { uploadexcel } = require('../utils/exlmulter');
 const questionbankRoute = express.Router();
 
 
-questionbankRoute.route('/add/subject').post(add_subject);
-questionbankRoute.route('/view/subject').get(view_subjects);
+questionbankRoute.route('/add/subject').post(userAuthMiddleware,add_subject);
+questionbankRoute.route('/view/subject').get(userAuthMiddleware,view_subjects);
 // questionbankRoute.route('/add/single/question').post(uploadimage.array(["option1","option2","option3","option4","question_url"]),insert_single_question);
 
 questionbankRoute.route('/add/single/question').post(uploadimage.fields([{name:"option1", maxCount: 1},{name:"option2", maxCount: 1},{name:"option3", maxCount: 1},{name:"option4", maxCount: 1},{name:"question_url", maxCount: 1}]),insert_single_question);
@@ -19,6 +19,8 @@ questionbankRoute.route('/update/category/for/subject').post(update_category_of_
 questionbankRoute.route('/insert/subcategory/for/subject').post(insert_new_subcategory);
 questionbankRoute.route('/delete/subcategory/for/subject').post(delete_new_subcategory);
 // questionbankRoute.route('/view/subcategory').post(view_sub_category);
+
+
 
 
 
