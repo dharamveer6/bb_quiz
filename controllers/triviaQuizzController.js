@@ -21,13 +21,11 @@ let createTriviaQuizz = async (req, res, next) => {
         sub_cat_id: Joi.string().required(),
         subjects_id: Joi.array().items(Joi.string()).required(),
         question_composition: Joi.array().items(Joi.object().pattern(Joi.string(), Joi.number().integer().min(0))).required().custom(customValidator),
-        total_num_of_quest: Joi.number.min(0).max(500).required(),
+        total_num_of_quest: Joi.number().min(0).max(500).required(),
         time_per_ques: Joi.number().required(),
         min_reward_per: Joi.number().required(),
         reward: Joi.number().min(0).max(500).required()
     });
-
-
 
     const { error } = await schema.validateAsync(req.body);
 
@@ -66,7 +64,46 @@ let createTriviaQuizz = async (req, res, next) => {
 
 let getQuizz = async (req, res, next) => {
 
-    let data = await triviaModel.find();
+    // let data = await triviaModel.find();
+
+    let data = await triviaModel.aggregate([
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category_id",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        {
+            $unwind: "$category"
+        },
+        {
+            $lookup: {
+                from: "subcategories",
+                localField: "sub_cat_id",
+                foreignField: "_id",
+                as: "subcategory"
+            }
+        },
+        {
+            $unwind: "$subcategory"
+        },
+        {
+            $project: {
+                "category_name": "$category.name",
+                "subcategory_name": "$subcategory.name",
+                "subjects_id": 1,
+                "question_composition": 1,
+                "total_num_of_quest": 1,
+                "min_reward_per": 1,
+                "reward": 1
+            }
+        }
+    ]);
+    
+    console.log(data);
+    
 
 
     return res.send({ data });
