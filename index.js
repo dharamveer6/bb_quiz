@@ -9,6 +9,7 @@ const { categoryRoute } = require('./routes/categoryRoute');
 const { questionbankRoute } = require('./routes/questionbankroutes');
 const { connectToRabbitMQ } = require('./rabbit_config');
 const { azurestreamroute } = require('./routes/azurestreamroutes');
+const { formfillroutes } = require('./routes/formfillroutes');
  
 const app = express();
 
@@ -29,6 +30,7 @@ connectToRabbitMQ()
 
 app.use('/category',categoryRoute);
 app.use('/questionbank',questionbankRoute);
+app.use('/formfill',formfillroutes)
 app.use('/stream',azurestreamroute)
 
 
