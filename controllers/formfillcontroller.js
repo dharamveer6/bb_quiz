@@ -1,4 +1,3 @@
-const Joi = require("joi");
 const { CreateError } = require("../utils/create_err");
 const { trycatch } = require("../utils/tryCatch");
 const Category = require("../models/categorymodel");
@@ -26,6 +25,8 @@ var get_all_sub_categories = async(req,res,next)=>{
 }
 
 
+
+
 get_all_categories = trycatch(get_all_categories)
 get_all_sub_categories = trycatch(get_all_sub_categories)
-module.exports = {get_all_categories , get_all_sub_categories}
+module.exports = {get_all_categories , get_all_sub_categories } 
