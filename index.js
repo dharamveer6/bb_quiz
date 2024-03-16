@@ -13,6 +13,8 @@ const { triviaRoute } = require('./routes/triviaQuizzRoutes');
  
 const app = express();
 
+connectToRabbitMQ()
+
 // hii
 
 app.use(cors());
