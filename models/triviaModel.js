@@ -33,6 +33,13 @@ const triviaSchema = new Schema(
         reward: {
             type: Number
         },
+        rules:{
+            type:String
+        },
+        banner:
+        {
+            type:String
+        }
        
     }
 
