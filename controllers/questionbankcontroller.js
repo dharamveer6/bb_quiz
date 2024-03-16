@@ -2,7 +2,7 @@ const Joi = require('joi');
 const { trycatch } = require('../utils/tryCatch');
 const { CreateError } = require('../utils/create_err');
 const Subject = require('../models/subjectmodel');
-const {moment}=require("../utils/timezone.js")
+// const {moment}=require("../utils/timezone.js")
 const { connectToRabbitMQ } = require('../rabbit_config');
 const Question = require('../models/questionmodel');
 const exceljs=require("exceljs");
@@ -24,7 +24,7 @@ var add_subject=async(req,res,next)=>{
     const{sub_name,cat_id,sub_cat_id}=req.body
 
   
-    
+
 
     let category = await Subject.findOne({sub_name});
 

@@ -16,7 +16,9 @@ const Quiz = new Schema({
     totalQuestions: { type: Number },
     timePerQuestion: { type: Number },
     scheduleDateTime: { type: Date },
+    createdDate: { type: Date },
     image: { type: String }, 
+    quiz_name: { type: String }, 
     rules: { type: String },
     entryFees: { type: Number }
 });
