@@ -164,6 +164,9 @@ let createTriviaQuizz = async (req, res, next) => {
     }
 
 
+    
+
+
 
    
         var blobName = "img/" + Date.now() + '-' + file_access.originalname;
