@@ -225,9 +225,9 @@ var insert_single_question=async(req,res,next)=>{
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen11));
 
+        const updated_time = moment().valueOf();
 
-
-        const newquestion = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:qu1blobName,ans});
+        const newquestion = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:qu1blobName,ans,update_time:updated_time});
 
        await newquestion.save();
   
@@ -244,8 +244,8 @@ var insert_single_question=async(req,res,next)=>{
         const sen1 = JSON.stringify({ blobName:op1blobName, file_access:op1file_access })
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen1));
-      
-        const newquestion = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:req.body.option1,option2:req.body.option2,option3:req.body.option3,option4:req.body.option4,question_url:op1blobName,ans});
+        const updated_time = moment().valueOf();
+        const newquestion = new Question({question,sub_id,is_ques_img:1,is_opt_img,option1:req.body.option1,option2:req.body.option2,option3:req.body.option3,option4:req.body.option4,question_url:op1blobName,ans,update_time:updated_time});
 
         await newquestion.save();
       
@@ -274,7 +274,8 @@ var insert_single_question=async(req,res,next)=>{
         channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
         channel.sendToQueue("upload_public_azure", Buffer.from(sen3));
         channel.sendToQueue("upload_public_azure", Buffer.from(sen4));
-        const newquestion = new Question({question,sub_id,is_ques_img:0,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:"",ans});
+        const updated_time = moment().valueOf();
+        const newquestion = new Question({question,sub_id,is_ques_img:0,is_opt_img,option1:op1blobName,option2:op2blobName,option3:op3blobName,option4:op4blobName,question_url:"",ans,update_time:updated_time});
 
         await newquestion.save();
       
@@ -284,7 +285,9 @@ var insert_single_question=async(req,res,next)=>{
   
       else{
 
-        const question = new Question({question,sub_id,is_ques_img:0,is_opt_img,option1:req.body.option1,option2:req.body.option2,option3:req.body.option3,option4:req.body.option4,question_url:"",ans});
+        const updated_time = moment().valueOf();
+
+        const question = new Question({question,sub_id,is_ques_img:0,is_opt_img,option1:req.body.option1,option2:req.body.option2,option3:req.body.option3,option4:req.body.option4,question_url:"",ans,update_time:updated_time});
 
         await question.save();
       
@@ -674,11 +677,12 @@ const {sub_id,delete_sub_cat_id}=req.body;
 
 
 
-
 // Update the document to remove the specified sub-category ID from the sub_cat_id array
 await Subject.updateOne(
-  { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where cat_id matches your_cat_id
-  { $pull: { sub_cat_id: new mongoose.Types.ObjectId(delete_sub_cat_id) } } // Pull the specified sub-category ID from the sub_cat_id array
+  { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where sub_id matches
+  {
+      $pull: { sub_cat_id: new mongoose.Types.ObjectId(delete_sub_cat_id) }, // Pull the specified sub-category ID from the sub_cat_id array
+  }
 );
 
 
@@ -703,12 +707,12 @@ const {sub_id,add_sub_cat_id}=req.body;
 
 
 
-
 // Update the document to remove the specified sub-category ID from the sub_cat_id array
 await Subject.updateOne(
-  { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where cat_id matches your_cat_id
-  { $addToSet: { sub_cat_id: new mongoose.Types.ObjectId(add_sub_cat_id) } } // Pull the specified sub-category ID from the sub_cat_id array
-);
+  { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where sub_id matches
+  {
+      $addToSet: { sub_cat_id: new mongoose.Types.ObjectId(add_sub_cat_id) }, // Add the specified sub-category ID to the sub_cat_id array
+  })
 
 
 return res.send({status:1,msg:"sub category insert successfully"})
