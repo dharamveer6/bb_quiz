@@ -17,12 +17,13 @@ const triviaSchema = new Schema(
                 ref: 'subjects'
             }
         },
-        question_composition: {
-            type: Array,
-            ref: 'subjects'
+        question_composition:{
+            type: Map,
+            of: Number,
+            ref: 'Subject' // Reference to the 'subjects' collection
         },
         total_num_of_quest: {
-            type: String
+            type: Number
         },
         time_per_question: {
             type: Number
@@ -33,6 +34,16 @@ const triviaSchema = new Schema(
         reward: {
             type: Number
         },
+        sch_time: {
+            type: Number
+        },
+        rules:{
+            type:Array
+        },
+        banner:
+        {
+            type:String
+        }
        
     }
 
