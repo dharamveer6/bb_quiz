@@ -20,11 +20,11 @@ var addCategory = async (req, res, next) => {
 
     const { error } = await schema.validateAsync(req.body);
 
-    const { sub_categories , category_name } = req.body;
+    const { sub_categories, category_name } = req.body;
     // console.log(typeof(sub_categories))
 
     sub_categories_array = JSON.parse(sub_categories)
-   
+
     if (!req.file) {
         throw new CreateError("FileUploadError", "image should not be empty")
     }
@@ -232,7 +232,7 @@ var view_category = async (req, res, next) => {
         categories: categoriesWithSubCategories,
         // profile:
         totalPages: totalPages,
-        totalCategories:totalCategories
+        totalCategories: totalCategories
     });
 
 }

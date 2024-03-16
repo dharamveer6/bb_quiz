@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require("path");
+const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 require('./db')
@@ -12,6 +13,9 @@ const { formfillroutes } = require('./routes/formfillroutes');
 const { triviaRoute } = require('./routes/triviaQuizzRoutes');
  
 const app = express();
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 // hii
 
