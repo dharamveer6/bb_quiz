@@ -21,10 +21,17 @@ var get_all_categories = async(req,res,next)=>{
     const searchFilter = search ? { category_name: { $regex: new RegExp(search, 'i') } } : {};
 
     // Find categories based on search filter
-    const categories = await Category.find(searchFilter, 'category_name');
+    var categories = await Category.find(searchFilter, 'category_name image');
+    for(i of categories)
+{
+    // console.log(i.image)
+    i.image = `https://dvuser.brainbucks.in/quizmicro/stream/get/public?blobname=${i.image}`
+    
+}    
 
-    // Return the result
-    res.json({ status: 1, categories: categories });
+
+// Return the result
+    res.json({ status: 1, categories: categories});
 
 }
 
