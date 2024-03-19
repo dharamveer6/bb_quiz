@@ -21,10 +21,17 @@ var get_all_categories = async(req,res,next)=>{
     const searchFilter = search ? { category_name: { $regex: new RegExp(search, 'i') } } : {};
 
     // Find categories based on search filter
-    const categories = await Category.find(searchFilter, 'category_name');
+    var categories = await Category.find(searchFilter, 'category_name image');
+    for(i of categories)
+{
+    // console.log(i.image)
+    i.image = `https://dvuser.brainbucks.in/quizmicro/stream/get/public?blobname=${i.image}`
+    
+}    
 
-    // Return the result
-    res.json({ status: 1, categories: categories });
+
+// Return the result
+    res.json({ status: 1, categories: categories});
 
 }
 
@@ -32,17 +39,20 @@ var get_all_categories = async(req,res,next)=>{
 var get_all_sub_categories = async(req,res,next)=>{
     // Validate request parameters
     const schema = Joi.object({
-        search: Joi.string().max(50).allow('').required() // Allow empty string as default value
+        search: Joi.string().max(50).allow('').required(),
+        cat_id: Joi.string().max(50).required()  // Allow empty string as default value
     });
 
     const { error } = await schema.validateAsync(req.query);
 
     // Extract search variable from query parameters
-    const { search } = req.query;
+    const { search ,cat_id} = req.query;
 
-    // Construct search filter
-    const searchFilter = search ? { sub_category_name: { $regex: new RegExp(search, 'i') } } : {};
-
+     // Construct search filter
+     const searchFilter = {
+        sub_category_name: { $regex: new RegExp(search, 'i') },
+        cat_id: cat_id // Filter by category ID
+    };
     // Find subcategories based on search filter
     const subCategories = await SubCategory.find(searchFilter, 'sub_category_name');
 
