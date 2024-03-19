@@ -57,10 +57,10 @@ var get_all_sub_categories = async(req,res,next)=>{
     const subCategories = await SubCategory.find(searchFilter, '_id sub_category_name');
 
     // Extract distinct subcategory names
-    const distinctSubCategories = [...new Set(subCategories.map(subCategory => subCategory.sub_category_name))];
+    // const distinctSubCategories = [...new Set(subCategories.map(subCategory => subCategory.sub_category_name))];
 
     // Return the result
-    res.json({ status: 1, sub_categories: distinctSubCategories });
+    res.json({ status: 1, sub_categories: subCategories });
 }
 
 
