@@ -67,8 +67,8 @@ var get_all_subjects_from_subcategories = async(req,res,next)=>{
    
 
     // Extract sub_ids and search from request body
-    const { sub_ids, search } = req.body;
-
+    const { sub_ids} = req.body;
+    const {search} = req.query;
     // Construct search filter
     const searchFilter = search ? { sub_name: { $regex: new RegExp(search, 'i') } } : {};
 
