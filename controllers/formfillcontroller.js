@@ -21,7 +21,7 @@ var get_all_categories = async(req,res,next)=>{
     const searchFilter = search ? { category_name: { $regex: new RegExp(search, 'i') } } : {};
 
     // Find categories based on search filter
-    var categories = await Category.find(searchFilter, 'category_name image');
+    var categories = await Category.find(searchFilter, '_id category_name image');
     for(i of categories)
 {
     // console.log(i.image)
@@ -54,7 +54,7 @@ var get_all_sub_categories = async(req,res,next)=>{
         cat_id: cat_id // Filter by category ID
     };
     // Find subcategories based on search filter
-    const subCategories = await SubCategory.find(searchFilter, 'sub_category_name');
+    const subCategories = await SubCategory.find(searchFilter, '_id sub_category_name');
 
     // Extract distinct subcategory names
     const distinctSubCategories = [...new Set(subCategories.map(subCategory => subCategory.sub_category_name))];
