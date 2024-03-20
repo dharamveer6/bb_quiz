@@ -136,4 +136,4 @@ var get_all_subjects_from_subcategories = async(req,res,next)=>{
 get_all_categories = trycatch(get_all_categories)
 get_all_sub_categories = trycatch(get_all_sub_categories)
 get_all_subjects_from_subcategories = trycatch(get_all_subjects_from_subcategories)
-module.exports = {get_all_categories , get_all_sub_categories,get_all_subjects_from_subcategories}
+module.exports = { get_all_categories, get_all_sub_categories, get_all_subjects_from_subcategories }

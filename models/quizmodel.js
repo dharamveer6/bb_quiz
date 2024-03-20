@@ -1,19 +1,37 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
 
 
-const Quiz = new mongoose.Schema({
-    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-    subCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
-    subjects: {type : String}, // Array of subjects
+const Quiz = new Schema({
+    quiz_name: { type: String },
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories' },
+    subCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'subcategories' },
+    subject_id: {
+        type: Array,
+        items: {
+            type: Schema.Types.ObjectId,
+            ref: 'subjects'
+        },
+    },
+    question_composition: {
+        type: Array,
+        items: {
+            type: Schema.Types.ObjectId,
+            ref: 'subjects'
+        }
+    },
     totalQuestions: { type: Number },
     timePerQuestion: { type: Number },
     scheduleDateTime: { type: Date },
-    image: { type: String }, // Assuming image is a URL
-    rules: { type: String },
+    createdDate: { type: Date },
+    image: { type: String },
+    quiz_repeat : { type: String },
+    total_slots: { type: Number },
+    rules: { type: Array },
     entryFees: { type: Number }
 });
 
 const quiz = mongoose.model('Quiz', Quiz);
 
-module.exports = {quiz};
+module.exports = quiz;

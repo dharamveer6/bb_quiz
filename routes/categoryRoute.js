@@ -1,4 +1,4 @@
-const express=require('express');
+const express = require('express');
 const { addsubcategory, view_sub_category, addCategory, view_category } = require('../controllers/categoryController');
 const { uploadimage } = require('../utils/imgmulter');
 const userAuthMiddleware = require('../middleware/user_tokenval');
@@ -14,4 +14,4 @@ categoryRoute.route('/view/subcategory').post(userAuthMiddleware,view_sub_catego
 
 
 
-module.exports = {categoryRoute}
+module.exports = { categoryRoute }
