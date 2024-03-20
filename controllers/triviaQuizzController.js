@@ -1,10 +1,16 @@
 const Joi = require('joi');
 const { trycatch } = require('../utils/tryCatch');
-const triviaModel = require('../models/triviaModel');
+
 const { connectToRabbitMQ } = require('../rabbit_config');
 const Question = require('../models/questionmodel');
-const { default: mongoose } = require('mongoose');
+const {  mongoose } = require('mongoose');
 const Subject = require('../models/subjectmodel');
+const TriviaQuiz = require('../models/triviaModel');
+const SubTriviaQuiz = require('../models/subtriviamodel');
+const { CreateError } = require('../utils/create_err');
+const {moment}=require("../utils/timezone.js")
+
+
 
 
 let createTriviaQuizz = async (req, res, next) => {
@@ -12,19 +18,43 @@ let createTriviaQuizz = async (req, res, next) => {
 
 
 
+  
+    req.body.subjects_id=JSON.parse(req.body.subjects_id)
     req.body.question_composition=JSON.parse(req.body.question_composition)
     req.body.rules=JSON.parse(req.body.rules)
-    req.body.subjects_id=JSON.parse(req.body.subjects_id)
 
 
     var data=req.body
 
     const schema = Joi.object({
         category_id: Joi.string().required(),
+        quiz_name: Joi.string().required(),
+        quiz_name: Joi.string().required(),
         sub_cat_id: Joi.string().required(),
-        subjects_id:Joi.array().items(Joi.string()).min().required(),
+        repeat:Joi.string().valid(
+            'never',
+            '5 mins',
+            '15 mins',
+            '30 mins',
+            '45 mins',
+            '1 hrs',
+            '2 hrs',
+            '3 hrs',
+            '6 hrs',
+            '1 days',
+            '2 days',
+            '3 days',
+            '1 week',
+            '2 week',
+            '1 month',
+            '2 month',
+            '3 month',
+            '6 month',
+            '1 year'
+        ).required(),
+        subjects_id:Joi.array().items(Joi.string()).min(1).required(),
         question_composition: Joi.object().pattern(
-            Joi.number().integer().required(),
+            Joi.string().required(),
             Joi.number().integer().max(100).min(0).required()
           ).max(10).required(),
         total_num_of_quest:Joi.number().required(),
@@ -34,10 +64,12 @@ let createTriviaQuizz = async (req, res, next) => {
      
         sch_time:Joi.string().regex(/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/)
         .message('Invalid date-time format. Please use DD-MM-YYYY HH:mm:ss').required(),
-        rules:Joi.array().items(Joi.string()).min().required()
+        rules:Joi.array().items(Joi.string()).min(1).required()
     });
 
     const { error } = await schema.validateAsync(req.body);
+  
+   
 
     let file_access = req.file;
 
@@ -57,9 +89,13 @@ let createTriviaQuizz = async (req, res, next) => {
         time_per_ques,
         min_reward_per,
         reward,
-        rules
+        rules,quiz_name,sch_time,repeat
     } =
         req.body
+
+        
+        sch_time  = moment(sch_time, 'DD-MM-YYYY HH:mm:ss').valueOf();
+        
 
 
     // return console.log(subjects_id,question_composition);
@@ -112,14 +148,14 @@ let createTriviaQuizz = async (req, res, next) => {
 
        
         // console.log(persentage);
-        var single_tag_quest =Math.floor(persentage / 100 * data.numberofquestion);
+        var single_tag_quest =Math.floor(persentage / 100 * data.total_num_of_quest);
         
 
         remain_question+=single_tag_quest
         
 
         if(check == count){
-          const data=req.body.numberofquestion-remain_question;
+          const data=req.body.total_num_of_quest-remain_question;
          
           single_tag_quest+=data
 
@@ -148,7 +184,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
 
           const que = await Question.aggregate([
-            { $match: { sub_id: mongoose.Types.ObjectId(i), is_del: 0 } },
+            { $match: { sub_id:new mongoose.Types.ObjectId(i), is_del: 0 } },
             { $sample: { size: single_tag_quest } }
         ]);
 
@@ -183,7 +219,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
     // return console.log(req.body);
 
-    let add = await triviaModel({
+    let add = await TriviaQuiz({
         category_id,
         sub_cat_id,
         subjects_id,
@@ -193,13 +229,54 @@ let createTriviaQuizz = async (req, res, next) => {
         min_reward_per,
         reward,
         rules,
-        banner: blobName
+        banner: blobName,quiz_name,sch_time,repeat
     })
-    await add.save()
+    await add.save();
+
+    const Trivia_Quiz_Id = add.id || add._id;
+
+    let add2 = await SubTriviaQuiz({
+        category_id,
+        sub_cat_id,
+        subjects_id,
+        question_composition,
+        total_num_of_quest,
+        time_per_ques,
+        min_reward_per,
+        reward,
+        rules,
+        banner: blobName,quiz_name,sch_time,repeat,Trivia_Quiz_Id
+    })
+    await add2.save();
+
+
+    if(repeat=="never"){
+       return res.send({ status: 1, message: "Quiz Create successfully" });
+    }
+
+    else{
+       
+
+        const sen2 = JSON.stringify({ Trivia_Quiz_Id })
+
+        channel.sendToQueue("Create_trivia_quiz", Buffer.from(sen2));
+        console.log("send to queue")
+        return res.send({ status: 1, message: "Quiz Create successfully" });
+    }
+
+
+
+
+
+
+
+
+
+
 
 
     
-    res.send({ status: 1, message: "successfuly registered" });
+
 
 }
 
