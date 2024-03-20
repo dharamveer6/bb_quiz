@@ -91,7 +91,55 @@ let createTriviaQuizz = async (req, res, next) => {
         reward,
         rules,quiz_name,sch_time,repeat
     } =
-        req.body
+    req.body
+
+    const customValidator = (value, helpers) => {
+
+        for (const obj of value) {
+            const totalCount = Object.values(obj).reduce((acc, count) => acc + count, 0);
+            if (totalCount !== 100) {
+                return helpers.message('The sum of counts in each question composition object should be 100');
+            }
+        }
+        return value;
+    }
+
+    question_composition=JSON.parse(question_composition)
+    // return console.log(question_composition);
+
+    // const schema = Joi.object({
+    //     category_id: Joi.string().required(),
+    //     sub_cat_id: Joi.string().required(),
+    //     subjects_id: Joi.string().required(),
+    //     question_composition: Joi.array().items(
+    //         Joi.object().pattern(Joi.string(), Joi.number().integer().min(0))
+    //       ).required().custom(customValidator).messages({
+    //         'any.invalid': 'The sum of counts in each question composition object should be 100'
+    //       }),
+    //     total_num_of_quest: Joi.number().min(0).max(500).required(),
+    //     time_per_ques: Joi.number().required(),
+    //     min_reward_per: Joi.number().required(),
+    //     reward: Joi.number().min(0).max(500).required(),
+    //     rules: Joi.string().required(),
+    // });
+
+    // const { error } = await schema.validateAsync( 
+    //     category_id,
+    //     sub_cat_id,
+    //     subjects_id,
+    //     question_composition,
+    //     total_num_of_quest,
+    //     time_per_ques,
+    //     min_reward_per,
+    //     reward,
+    //     rules
+    //     );
+
+    // let file_access = req.file;
+
+    // return console.log(file_access);
+
+ 
 
         
         sch_time  = moment(sch_time, 'DD-MM-YYYY HH:mm:ss').valueOf();
@@ -208,9 +256,9 @@ let createTriviaQuizz = async (req, res, next) => {
         var blobName = "img/" + Date.now() + '-' + file_access.originalname;
 
 
-        var channel = await connectToRabbitMQ()
+        var channel = await connectToRabbitMQ();
 
-        const sen2 = JSON.stringify({ blobName, file_access })
+        const sen2 = JSON.stringify({ blobName, file_access });
 
         channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
         console.log("send to queue")
@@ -283,6 +331,14 @@ let createTriviaQuizz = async (req, res, next) => {
 
 let getQuizz = async (req, res, next) => {
 
+    const schema = Joi.object({
+        searchQuery: Joi.string().allow(''),
+        page: Joi.number().integer(),
+        limit: Joi.number().integer(),
+    })
+    const { error } = await schema.validateAsync(req.query);
+    let { searchQuery, page, limit } = req.query;
+
     // let data = await triviaModel.find();
 
     let data = await triviaModel.aggregate([
@@ -312,6 +368,7 @@ let getQuizz = async (req, res, next) => {
             $project: {
                 "category_name": "$category.category_name",
                 "subcategory_name": "$subcategory.sub_category_name",
+                "quiz_name":1,
                 "total_num_of_quest": 1,
                 "min_reward_per": 1,
                 "reward": 1,
