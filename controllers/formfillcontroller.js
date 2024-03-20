@@ -66,38 +66,66 @@ var get_all_sub_categories = async(req,res,next)=>{
 
 var get_all_subjects_from_subcategories = async(req,res,next)=>{
     
-
      // Validate request body
      const schema = Joi.object({
         sub_ids: Joi.array().items(Joi.string().required()).required(),
+    });
+     const schema2 = Joi.object({
         search: Joi.string().max(50).allow('').required() // Allow empty string as default value
+
     });
 
     const { error } = await schema.validateAsync(req.body);
+    const { error2 } = await schema2.validateAsync(req.query);
    
 
     // Extract sub_ids and search from request body
     const { sub_ids} = req.body;
     const {search} = req.query;
-    // Construct search filter
-    const searchFilter = search ? { sub_name: { $regex: new RegExp(search, 'i') } } : {};
 
-    // Fetch subjects matching the IDs and search filter
-    const subjects = await Subject.find({ sub_cat_id: { $in: sub_ids }, ...searchFilter });
 
-    // Extract unique sub_names from subjects
-    const uniqueSubNames = new Set();
-    subjects.forEach(subject => {
-        if (subject.sub_name) { // Check if sub_name field exists
-            uniqueSubNames.add(subject.sub_name);
-        }
-    });
+    
+    // // Construct search filter
+    // const searchFilter = search ? { sub_name: { $regex: new RegExp(search, 'i') } } : {};
 
-    // Convert the set to an array of unique sub_names
-    const subNames = Array.from(uniqueSubNames);
+    // // Fetch subjects matching the IDs and search filter
+    // const subjects = await Subject.find({ sub_cat_id: { $in: sub_ids }, ...searchFilter });
 
-    // Return the result
-    res.json({ status: 1, data: subNames });
+    // // Extract unique sub_names from subjects
+    // const uniqueSubNames = new Set();
+    // subjects.forEach(subject => {
+    //     if (subject.sub_name) { // Check if sub_name field exists
+    //         uniqueSubNames.add(subject.sub_name);
+    //     }
+    // });
+
+    // // Convert the set to an array of unique sub_names
+    // const subNames = Array.from(uniqueSubNames);
+
+    // // Return the result
+    // res.json({ status: 1, data: subNames });
+
+
+
+     // Construct search filter
+     const searchFilter = search ? { sub_name: { $regex: new RegExp(search, 'i') } } : {};
+
+     // Fetch subjects matching the IDs and search filter
+     const subjects = await Subject.find({ sub_cat_id: { $in: sub_ids }, ...searchFilter });
+ 
+     // Extract unique sub_names and _ids from subjects
+     const uniqueSubjects = new Map(); // Using Map to store unique subjects based on sub_name
+     subjects.forEach(subject => {
+         if (subject.sub_name && !uniqueSubjects.has(subject.sub_name)) {
+             uniqueSubjects.set(subject.sub_name, subject._id);
+         }
+     });
+ 
+     // Convert the Map to an array of objects containing _id and sub_name
+     const subNamesWithIds = Array.from(uniqueSubjects, ([sub_name, _id]) => ({ _id, sub_name }));
+ 
+     // Return the result
+     res.json({ status: 1, data: subNamesWithIds });
 
 
 }
