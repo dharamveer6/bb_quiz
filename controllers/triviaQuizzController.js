@@ -254,6 +254,14 @@ let createTriviaQuizz = async (req, res, next) => {
 
 let getQuizz = async (req, res, next) => {
 
+    const schema = Joi.object({
+        searchQuery: Joi.string().allow(''),
+        page: Joi.number().integer(),
+        limit: Joi.number().integer(),
+    })
+    const { error } = await schema.validateAsync(req.query);
+    let { searchQuery, page, limit } = req.query;
+
     // let data = await triviaModel.find();
 
     let data = await triviaModel.aggregate([
@@ -283,6 +291,7 @@ let getQuizz = async (req, res, next) => {
             $project: {
                 "category_name": "$category.category_name",
                 "subcategory_name": "$subcategory.sub_category_name",
+                "quiz_name":1,
                 "total_num_of_quest": 1,
                 "min_reward_per": 1,
                 "reward": 1,

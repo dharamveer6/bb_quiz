@@ -49,6 +49,6 @@ const triviaSchema = new Schema(
 
 )
 
-const triviaModel = mongoose.model('trivia_quizzes', triviaSchema);
+const triviaModel = mongoose.model('triviaquizzes', triviaSchema);
 
 module.exports = triviaModel;
