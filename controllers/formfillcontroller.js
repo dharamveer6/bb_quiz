@@ -6,17 +6,17 @@ const Subject = require("../models/subjectmodel");
 
 
 
-var get_all_categories = async(req,res,next)=>{
+var get_all_categories = async (req, res, next) => {
     const categories = await Category.find({}, 'category_name');
-        res.json({
-            status: 1,
-            categories: categories
-        });
+    res.json({
+        status: 1,
+        categories: categories
+    });
 
 }
 
 
-var get_all_sub_categories = async(req,res,next)=>{
+var get_all_sub_categories = async (req, res, next) => {
     // Fetch all sub-categories from the database
     const subCategories = await SubCategory.distinct('sub_category_name');
     res.json({
@@ -26,8 +26,8 @@ var get_all_sub_categories = async(req,res,next)=>{
 }
 
 
-var get_all_subjects_from_subcategories = async(req,res,next)=>{
-    
+var get_all_subjects_from_subcategories = async (req, res, next) => {
+
 
     const schema = Joi.object({
         sub_ids: Joi.array().items(Joi.string().required())
@@ -62,4 +62,4 @@ var get_all_subjects_from_subcategories = async(req,res,next)=>{
 get_all_categories = trycatch(get_all_categories)
 get_all_sub_categories = trycatch(get_all_sub_categories)
 get_all_subjects_from_subcategories = trycatch(get_all_subjects_from_subcategories)
-module.exports = {get_all_categories , get_all_sub_categories,get_all_subjects_from_subcategories}
+module.exports = { get_all_categories, get_all_sub_categories, get_all_subjects_from_subcategories }
