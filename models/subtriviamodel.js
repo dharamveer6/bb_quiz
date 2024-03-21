@@ -12,7 +12,7 @@ const triviaSchema = new Schema(
         },
         Trivia_Quiz_Id:{
             type: Schema.Types.ObjectId,
-            ref: 'TriviaQuizs'
+            ref: 'triviaquizzes'
         },
         subjects_id: {
             type: Array,
