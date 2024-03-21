@@ -90,7 +90,7 @@ var view_subjects = async (req, res, next) => {
 
   // Count total categories for pagination
   const totalsubjects = await Subject.countDocuments(searchFilter);
-
+  console.log("searchResults",totalsubjects)
   // Calculate total pages
   const totalPages = Math.ceil(totalsubjects / limit);
   console.log("total_page", totalPages)
@@ -134,8 +134,8 @@ var view_subjects = async (req, res, next) => {
     {
       $lookup: {
         from: 'questions',
-        localField: 'sub_id',
-        foreignField: '_id',
+        localField: '_id',
+        foreignField: 'sub_id',
         as: 'questions'
       }
     },
@@ -162,7 +162,7 @@ var view_subjects = async (req, res, next) => {
     }
   ]);
 
-  console.log("sub_len",subjects.length)
+  console.log("sub_len", subjects.length)
 
 
   for (let i of subjects) {
@@ -769,14 +769,15 @@ var get_questions_in_subject = async (req, res, next) => {
 
 var del_question = async (req, res, next) => {
   const schema = Joi.object({
-    sub_id: Joi.string().max(150).required(),
+    que_id: Joi.string().max(150).required(),
 
   });
   const { error } = await schema.validateAsync(req.body);
+  
+  const { que_id } = req.body
+  console.log(que_id)
 
-  const { sub_id } = req.body
-
-  await Question.updateOne({ _id: new mongoose.Types.ObjectId }, { is_del: 1 });
+  await Question.updateOne({ _id: new mongoose.Types.ObjectId(que_id) }, { is_del: 1 });
 
   res.send({ status: 1, msg: "question delete succesfully" })
 }
