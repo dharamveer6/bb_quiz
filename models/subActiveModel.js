@@ -15,7 +15,7 @@ const ActiveQuizSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'quizzes'
         },
-        subjects_id: {
+        subject_id: {
             type: Array,
             items: {
                 type: Schema.Types.ObjectId,
@@ -25,7 +25,7 @@ const ActiveQuizSchema = new Schema(
         question_composition: {
             type: Map,
             of: Number,
-             ref: 'subjects',
+            ref: 'subjects',
             // Reference to the 'subjects' collection
         },
         totalQuestions: { type: Number },
@@ -33,7 +33,7 @@ const ActiveQuizSchema = new Schema(
         scheduleDateTime: { type: Date },
         createdDate: { type: Date },
         image: { type: String },
-        quiz_repeat : { type: String },
+        quiz_repeat: { type: String },
         total_slots: { type: Number },
         rules: { type: Array },
         entryFees: { type: Number }
@@ -44,4 +44,4 @@ const ActiveQuizSchema = new Schema(
 
 const SubActiveQuiz = mongoose.model('SubActiveQuiz', ActiveQuizSchema);
 
-module.exports = {SubActiveQuiz};
+module.exports = { SubActiveQuiz };
