@@ -10,6 +10,10 @@ const triviaSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'subcategories'
         },
+        Trivia_Quiz_Id:{
+            type: Schema.Types.ObjectId,
+            ref: 'TriviaQuizs'
+        },
         subjects_id: {
             type: Array,
             items: {
@@ -57,6 +61,6 @@ const triviaSchema = new Schema(
 
 )
 
-const TriviaQuiz = mongoose.model('TriviaQuiz', triviaSchema);
+const SubTriviaQuiz = mongoose.model('SubTriviaQuiz', triviaSchema);
 
-module.exports = TriviaQuiz;
+module.exports = SubTriviaQuiz;

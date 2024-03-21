@@ -12,7 +12,7 @@ const questionSchema = new Schema({
     option4: { type: String },
     question_url: { type: String},
     ans: { type:Number },
-    is_del: { type:Number,default:0 }
+    is_del: { type:Number,default:0 },
 });
 
 const Question = mongoose.model('Question', questionSchema);
