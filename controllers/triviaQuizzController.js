@@ -564,7 +564,6 @@ let viewDetails = async (req, res, next) => {
 
 }
 
-
 createTriviaQuizz = trycatch(createTriviaQuizz);
 getQuizz = trycatch(getQuizz)
 viewDetails = trycatch(viewDetails)
