@@ -3,12 +3,13 @@ const { trycatch } = require('../utils/tryCatch');
 
 const { connectToRabbitMQ } = require('../rabbit_config');
 const Question = require('../models/questionmodel');
-const { mongoose } = require('mongoose');
+const { mongoose, Mongoose } = require('mongoose');
 const Subject = require('../models/subjectmodel');
 const SubTriviaQuiz = require('../models/subtriviamodel');
 const { CreateError } = require('../utils/create_err');
 const { moment } = require("../utils/timezone.js")
-const triviaModel = require("../models/triviaModel.js")
+const triviaModel = require("../models/triviaModel.js");
+const TriviaQuiz = require('../models/triviaModel.js');
 
 
 
@@ -328,36 +329,48 @@ let createTriviaQuizz = async (req, res, next) => {
 }
 
 
+
+
 let getQuizz = async (req, res, next) => {
     const schema = Joi.object({
         searchQuery: Joi.string().allow(''),
         page: Joi.number().integer(),
         limit: Joi.number().integer(),
-        date: Joi.string().allow('')
+        fromDate: Joi.string().allow(''),
+        toDate: Joi.string().allow(''),
     });
+    //     const unixTimestamp = 1710572400000;
+
+    //     // Convert Unix timestamp to Date object
+    //     const datew = new Date(unixTimestamp);
+
+    //     // Format the date using Moment.js
+    //     const formattedDate = moment(datew).format('DD-MM-YYYY HH:mm:ss');
+
+    //    return console.log(formattedDate);
 
     const { error } = await schema.validateAsync(req.query);
     if (error) {
         return res.status(400).send({ error: error.details[0].message });
     }
 
-    var { date, searchQuery, page, limit } = req.query;
- if(date){
+    var { searchQuery, page, limit, fromDate, toDate } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
 
-    var [startDateStr, endDateStr] = date.split(" - ");
-    var startDate = moment(startDateStr).format('YYYY-MM-DD')
-    startDate = moment(startDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+    fromDate = fromDate + ' 00:01:00';
+    toDate = toDate + ' 23:59:59';
 
-    var endDate = moment(endDateStr).format('YYYY-MM-DD');
-    endDate = moment(endDate, 'DD-MM-YYYY HH:mm:ss').valueOf()
- }
+    fromDate = moment(fromDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+    toDate = moment(toDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+    // return console.log(fromDate,toDate);
 
     // return console.log(startDate,endDate);
-    let data = await triviaModel.aggregate([
+    let data = await SubTriviaQuiz.aggregate([
         {
             $match: {
-                quiz_name: { $regex: searchQuery, $options: 'i' },
-                sch_time: { $gte: startDate, $lte: endDate }
+                // quiz_name: { $regex: searchQuery, $options: 'i' },
+                sch_time: { $gte: fromDate, $lte: toDate }
             }
         },
         // {
@@ -390,18 +403,170 @@ let getQuizz = async (req, res, next) => {
         //         "total_num_of_quest": 1,
         //         "min_reward_per": 1,
         //         "reward": 1,
-        //         "banner": 1
+        //         "banner": 1,
+        //         "sch_time":1,
+        //         "Trivia_Quiz_Id":1
         //     }
-        // }
+        // },
+
     ]);
 
-    console.log(data);
-    return res.send({ status: 1, data });
+
+
+
+
+    const trivia_arr = []
+
+    for (let i of data) {
+        i.sch_time = moment(i.sch_time).format("DD-MM-YYYY HH:mm:ss");
+
+        trivia_arr.push(i.Trivia_Quiz_Id)
+
+
+    }
+    // const search_ids=new Set(trivia_arr);
+
+    totalData = await TriviaQuiz.countDocuments({
+        quiz_name: { $regex: searchQuery, $options: 'i' },
+        _id: { $in: trivia_arr }
+        // sch_time: { $gte: fromDate, $lte: toDate }
+    });
+
+
+    let data2 = await TriviaQuiz.aggregate([
+        {
+            $match: {
+                quiz_name: { $regex: searchQuery, $options: 'i' },
+                _id: { $in: trivia_arr }
+            }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category_id",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        {
+            $unwind: "$category"
+        },
+        {
+            $lookup: {
+                from: "subcategories",
+                localField: "sub_cat_id",
+                foreignField: "_id",
+                as: "subcategory"
+            }
+        },
+        {
+            $unwind: "$subcategory"
+        },
+        {
+            $project: {
+                "category_name": "$category.category_name",
+                "subcategory_name": "$subcategory.sub_category_name",
+                "quiz_name": 1,
+                "total_num_of_quest": 1,
+                "min_reward_per": 1,
+                "reward": 1,
+                "banner": 1,
+                "sch_time": 1,
+                "Trivia_Quiz_Id": 1
+            }
+        },
+        {
+            $skip: (page - 1) * limit // Skip documents based on pagination
+        },
+        {
+            $limit: limit // Limit the number of documents per page
+        }
+    ]);
+
+
+
+
+    const totalPages = Math.ceil(totalData / limit);
+    console.log(totalPages);
+
+    for (let i of data2) {
+        i.sch_time = moment(i.sch_time).format("DD-MM-YYYY HH:mm:ss");
+
+
+
+
+    }
+
+
+
+
+    return res.send({ status: 1, data2, totalPages: totalPages, totalData: totalData });
 }
 
+let viewDetails = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().allow(''),
+    });
+    const { error } = await schema.validateAsync(req.query);
+    if (error) {
+        return res.status(400).send({ error: error.details[0].message });
+    }
+    let { id } = req.query
+    console.log(id);
+    // id= new Types.ObjectId(id)
+    const [data] = await TriviaQuiz.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(id)
+            }
+        },
+
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category_id",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        {
+            $unwind: "$category"
+        },
+        {
+            $lookup: {
+                from: "subcategories",
+                localField: "sub_cat_id",
+                foreignField: "_id",
+                as: "subcategory"
+            }
+        },
+        {
+            $unwind: "$subcategory"
+        },
+        {
+            $project: {
+                "category_name": "$category.category_name",
+                "subcategory_name": "$subcategory.sub_category_name",
+                "quiz_name": 1,
+                "total_num_of_quest": 1,
+                "min_reward_per": 1,
+                "reward": 1,
+                "banner": 1,
+                "sch_time": 1,
+                "Trivia_Quiz_Id": 1
+            }
+        }])
+
+    data.sch_time = moment(data.sch_time).format('DD-MM-YYYY HH:mm');
+    console.log(data.sch_time);
+    res.send({ status: 1, data })
+
+}
 
 
 createTriviaQuizz = trycatch(createTriviaQuizz);
 getQuizz = trycatch(getQuizz)
+viewDetails = trycatch(viewDetails)
 
-module.exports = { createTriviaQuizz, getQuizz }
+module.exports = { createTriviaQuizz, getQuizz, viewDetails }
