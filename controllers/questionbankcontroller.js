@@ -78,10 +78,10 @@ var view_subjects = async (req, res, next) => {
 
   // const { page, limit, search } = req.query;
   const page = parseInt(req.query.page)
-  console.log(page)
+  // console.log(page)
   const limit = parseInt(req.query.limit)
-  const search = parseInt(req.query.search)
-
+  const search = req.query.search
+  console.log(req.query)
   // Calculate skip value for pagination
   const skip = (page - 1) * limit;
   // Construct search filter
@@ -93,19 +93,23 @@ var view_subjects = async (req, res, next) => {
 
   // Calculate total pages
   const totalPages = Math.ceil(totalsubjects / limit);
+  console.log("total_page", totalPages)
 
   // Find categories with pagination and search filter
   const subjects = await Subject.aggregate([
+    {
+      $match: searchFilter // Apply the search filter here if necessary
+    },
     {
       $lookup: {
         from: 'categories',
         localField: 'cat_id',
         foreignField: '_id',
-        as: 'category'
+        as: 'categories'
       }
     },
     {
-      $unwind: '$category'
+      $unwind: '$categories'
     },
     {
       $lookup: {
@@ -120,8 +124,9 @@ var view_subjects = async (req, res, next) => {
     },
     {
       $project: {
+
         sub_name: 1,
-        category_name: '$category.category_name',
+        category_name: '$categories.category_name',
         sub_category_names: '$subcategories.sub_category_name',
         update_time: 1
       }
@@ -129,8 +134,8 @@ var view_subjects = async (req, res, next) => {
     {
       $lookup: {
         from: 'questions',
-        localField: '_id',
-        foreignField: 'sub_id',
+        localField: 'sub_id',
+        foreignField: '_id',
         as: 'questions'
       }
     },
@@ -156,8 +161,8 @@ var view_subjects = async (req, res, next) => {
       $limit: limit
     }
   ]);
-  
-  console.log(subjects)
+
+  console.log("sub_len",subjects.length)
 
 
   for (let i of subjects) {
@@ -189,7 +194,7 @@ var insert_single_question = async (req, res, next) => {
 
 
 
-
+  console.log(req.body)
 
   const { error } = await schema.validateAsync(req.body);
 
