@@ -15,23 +15,21 @@ const Quiz = new Schema({
         },
     },
     question_composition: {
-        type: Array,
-        items: {
-            type: Schema.Types.ObjectId,
-            ref: 'subjects'
-        }
+        type: Map,
+        of: Number,
+        ref: 'subjects',
     },
     totalQuestions: { type: Number },
     timePerQuestion: { type: Number },
     scheduleDateTime: { type: Date },
     createdDate: { type: Date },
     image: { type: String },
-    quiz_repeat : { type: String },
+    quiz_repeat: { type: String },
     total_slots: { type: Number },
     rules: { type: Array },
     entryFees: { type: Number }
 });
 
-const quiz = mongoose.model('Quiz', Quiz);
+const quiz = mongoose.model('ActiveQuiz', Quiz);
 
 module.exports = quiz;

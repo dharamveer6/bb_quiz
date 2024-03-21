@@ -2,11 +2,12 @@ const mongoose = require("mongoose")
 const Joi = require("joi");
 const { trycatch } = require("../utils/tryCatch");
 const { CreateError } = require("../utils/create_err");;
-const quiz = require("../models/quizmodel");
+const quiz = require("../models/activequizmodel");
 const { connectToRabbitMQ } = require("../rabbit_config");
 const { moment } = require('../utils/timezone');
 const Question = require("../models/questionmodel");
 const Subject = require("../models/subjectmodel");
+const { SubActiveQuiz } = require("../models/subActiveModel");
 
 
 var add_Quiz = async (req, res, next) => {
@@ -40,6 +41,8 @@ var add_Quiz = async (req, res, next) => {
 
     var { quiz_name, categoryId, subject_id, subCategoryId, scheduleDateTime, timePerQuestion, total_slots, quiz_repeat, totalQuestions, image, entryFees, rules, question_composition } = req.body;
 
+    scheduleDateTime = moment(scheduleDateTime, 'DD-MM-YYYY HH:mm:ss').valueOf();
+
     const keys = Object.keys(data.question_composition);
     // console.log(keys)
     const count = keys.length;
@@ -64,16 +67,13 @@ var add_Quiz = async (req, res, next) => {
 
     }
 
-    console.log(check_pers == 100, "check_per")
+    // console.log(check_pers == 100, "check_per")
 
-    if (check_pers == 100) {
+    if (check_pers != 100) {
 
-        console.log("next")
-
-    }
-    else {
         throw new CreateError("CustomError", `total persent is ${check_pers} make sure you persent will 100`)
     }
+
 
 
     for (let i in data.question_composition) {
@@ -103,7 +103,7 @@ var add_Quiz = async (req, res, next) => {
 
         const ques = await Question.find({ sub_id: new mongoose.Types.ObjectId(i), is_del: 0 })
 
-        const { sub_name: topic_name } = await Subject.findOne({ _id: new mongoose.Types.ObjectId(i) })
+        const topic_name = await Subject.findOne({ _id: new mongoose.Types.ObjectId(i) })
         console.log(topic_name)
 
 
@@ -112,9 +112,9 @@ var add_Quiz = async (req, res, next) => {
         que_len = ques.length;
         // console.log(que_len)
 
-        if (que_len < single_tag_quest) {
-            throw new CreateError("CustomError", `${topic_name} has tag has not sufficient question`)
-        }
+        // if (que_len < single_tag_quest) {
+        //     throw new CreateError("CustomError", `${topic_name} has tag has not sufficient question`)
+        // }
 
 
 
@@ -155,8 +155,30 @@ var add_Quiz = async (req, res, next) => {
 
     channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
 
-    const create_quiz = new quiz({ quiz_name, subject_id, categoryId, subCategoryId, question_composition, quiz_repeat, createdDate, total_slots, rules: rulesArray, entryFees, scheduleDateTime, quiz_repeat, totalQuestions, timePerQuestion, image: blobName });
+    const create_quiz = await new quiz({ quiz_name, subject_id, categoryId, subCategoryId, question_composition, quiz_repeat, createdDate, total_slots, rules: rulesArray, entryFees, scheduleDateTime, quiz_repeat, totalQuestions, timePerQuestion, image: blobName });
     await create_quiz.save();
+
+    const Active_Quiz_Id = create_quiz.id || create_quiz._id;
+
+    let add_to_sub_active_quiz = await new SubActiveQuiz({
+        Active_Quiz_Id,
+        quiz_name,
+        subject_id,
+        categoryId,
+        subCategoryId,
+        question_composition,
+        quiz_repeat,
+        createdDate,
+        total_slots,
+        rules: rulesArray,
+        entryFees,
+        scheduleDateTime,
+        quiz_repeat,
+        totalQuestions,
+        timePerQuestion,
+        image: blobName
+    })
+    await add_to_sub_active_quiz.save();
 
     res.send({ status: 1, message: 'quiz create successfully', create_quiz });
 
@@ -543,4 +565,4 @@ add_Quiz = trycatch(add_Quiz)
 get_quiz = trycatch(get_quiz)
 update_quiz = trycatch(update_quiz)
 
-module.exports = { add_Quiz, get_quiz,update_quiz }
+module.exports = { add_Quiz, get_quiz, update_quiz }
