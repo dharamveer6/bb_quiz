@@ -93,52 +93,66 @@ var view_subjects=async(req,res,next)=>{
 
     // Find categories with pagination and search filter
     const subjects = await Subject.aggregate([
-        {
+      {
           $lookup: {
-            from: 'categories',
-            localField: 'cat_id',
-            foreignField: '_id',
-            as: 'category'
+              from: 'categories',
+              localField: 'cat_id',
+              foreignField: '_id',
+              as: 'category'
           }
-        },
-        {
+      },
+      {
           $unwind: '$category'
-        },
-        {
+      },
+      {
           $lookup: {
-            from: 'subcategories',
-            localField: 'sub_cat_id',
-            foreignField: '_id',
-            as: 'subcategories'
+              from: 'subcategories',
+              localField: 'sub_cat_id',
+              foreignField: '_id',
+              as: 'subcategories'
           }
-        },
-        {
-            $unwind: '$subcategories'
-          },
-        {
+      },
+      {
+          $unwind: '$subcategories'
+      },
+      {
           $project: {
-            sub_name: 1,
-            category_name: '$category.category_name', // Extract category_name directly
-            sub_category_names: '$subcategories.sub_category_name' ,
-            update_time :1// Extract sub_category_names directly
+              sub_name: 1,
+              category_name: '$category.category_name',
+              sub_category_names: '$subcategories.sub_category_name',
+              update_time: 1
           }
-        },
-        {
+      },
+      {
+          $lookup: {
+              from: 'questions',
+              localField: '_id',
+              foreignField: 'sub_id',
+              as: 'questions'
+          }
+      },
+      {
+          $addFields: {
+              questionCount: { $size: '$questions' } // Count the number of questions
+          }
+      },
+      {
           $group: {
-            _id: '$_id',
-            update_time:{ $first: '$update_time' },
-            sub_name: { $first: '$sub_name' },
-            category: { $first: '$category_name' }, // Rename category_name to category
-            subcategories: { $push: '$sub_category_names' } // Group sub_category_names into an array
+              _id: '$_id',
+              update_time: { $first: '$update_time' },
+              sub_name: { $first: '$sub_name' },
+              category: { $first: '$category_name' },
+              subcategories: { $push: '$sub_category_names' },
+              questionCount: { $first: '$questionCount' } // Preserve question count
           }
-        },
-        {
-          $skip: skip // Skip documents based on pagination
-        },
-        {
-          $limit: limit // Limit the number of documents based on pagination
-        }
-      ]);
+      },
+      {
+          $skip: skip
+      },
+      {
+          $limit: limit
+      }
+  ]);
 
       console.log(subjects)
 
@@ -676,13 +690,17 @@ const { error } = await schema.validateAsync(req.body);
    
 const {sub_id,delete_sub_cat_id}=req.body;
 
-
+var update_time=moment().valueOf()
 
 // Update the document to remove the specified sub-category ID from the sub_cat_id array
 await Subject.updateOne(
   { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where sub_id matches
   {
-      $pull: { sub_cat_id: new mongoose.Types.ObjectId(delete_sub_cat_id) }, // Pull the specified sub-category ID from the sub_cat_id array
+      $pull: { sub_cat_id: new mongoose.Types.ObjectId(delete_sub_cat_id) },
+      $set: {
+        update_time: update_time, // Update another field using $set
+      
+    } 
   }
 );
 
@@ -707,13 +725,20 @@ const { error } = await schema.validateAsync(req.body);
 const {sub_id,add_sub_cat_id}=req.body;
 
 
+var update_time=moment().valueOf()
 
 // Update the document to remove the specified sub-category ID from the sub_cat_id array
 await Subject.updateOne(
   { _id: new mongoose.Types.ObjectId(sub_id) }, // Match documents where sub_id matches
   {
-      $addToSet: { sub_cat_id: new mongoose.Types.ObjectId(add_sub_cat_id) }, // Add the specified sub-category ID to the sub_cat_id array
-  })
+      $addToSet: { sub_cat_id: new mongoose.Types.ObjectId(add_sub_cat_id) },
+      $set: {
+        update_time: update_time, // Update another field using $set
+      
+    } // Add the specified sub-category ID to the sub_cat_id array
+  },
+ 
+  )
 
 
 return res.send({status:1,msg:"sub category insert successfully"})
@@ -745,7 +770,7 @@ const {sub_id}=req.body
 
 await Question.updateOne({_id:new mongoose.Types.ObjectId},{is_del:1});
 
-res.send({status:1,msg:"question dlete succesfully"})
+res.send({status:1,msg:"question delete succesfully"})
 }
 
 
@@ -766,6 +791,8 @@ add_subject=trycatch(add_subject)
 view_subjects=trycatch(view_subjects)
 insert_single_question = trycatch(insert_single_question);
 add_bulk_question=trycatch(add_bulk_question)
+del_question=trycatch(del_question)
+get_questions_in_subject=trycatch(get_questions_in_subject)
 
 
-module.exports={add_subject,view_subjects , insert_single_question,add_bulk_question,update_category_of_subject,view_edit_page_for_subject,delete_new_subcategory,insert_new_subcategory}
+module.exports={del_question,get_questions_in_subject,add_subject,view_subjects , insert_single_question,add_bulk_question,update_category_of_subject,view_edit_page_for_subject,delete_new_subcategory,insert_new_subcategory}
