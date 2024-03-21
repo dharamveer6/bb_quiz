@@ -763,8 +763,12 @@ var get_questions_in_subject = async (req, res, next) => {
   const { sub_id } = req.body;
 
   const questions = await Question.find({ sub_id: new mongoose.Types.ObjectId(sub_id) });
-
-  res.send({ status: 1, questions })
+  if(questions.length == 0){
+    res.send({status : 1 ,  message : "No question available for this subject"})
+  }
+  else{
+    res.send({ status: 1, questions })
+  }
 }
 
 var del_question = async (req, res, next) => {
