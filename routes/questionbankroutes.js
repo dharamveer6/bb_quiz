@@ -11,7 +11,7 @@ const questionbankRoute = express.Router();
 
 questionbankRoute.route('/add/subject').post(userAuthMiddleware,add_subject);
 questionbankRoute.route('/view/subject').get(userAuthMiddleware,view_subjects);
-questionbankRoute.route('/add/single/question').post(userAuthMiddleware,uploadimage.fields([{name:"option1", maxCount: 1},{name:"option2", maxCount: 1},{name:"option3", maxCount: 1},{name:"option4", maxCount: 1},{name:"question_url", maxCount: 1}]),insert_single_question);
+questionbankRoute.route('/add/single/question').post(uploadimage.fields([{name:"option1", maxCount: 1},{name:"option2", maxCount: 1},{name:"option3", maxCount: 1},{name:"option4", maxCount: 1},{name:"question_url", maxCount: 1}]),insert_single_question);
 questionbankRoute.route('/add/excel/questions').post(userAuthMiddleware,uploadexcel.single("excel"),add_bulk_question);
 
 
