@@ -21,16 +21,21 @@ let createTriviaQuizz = async (req, res, next) => {
     req.body.question_composition = JSON.parse(req.body.question_composition)
     req.body.rules = JSON.parse(req.body.rules)
     req.body.subjects_id = JSON.parse(req.body.subjects_id)
+    req.body.total_num_of_quest = JSON.parse(req.body.total_num_of_quest)
+    // return console.log(req.body.total_num_of_quest);
+
+    req.body.time_per_ques = JSON.parse(req.body.time_per_ques)
+    req.body.reward = JSON.parse(req.body.reward)
+    req.body.min_reward_per = JSON.parse(req.body.min_reward_per)
 
 
     var data = req.body
+    // return console.log(0);
 
     const schema = Joi.object({
         category_id: Joi.string().required(),
         quiz_name: Joi.string().required(),
-        quiz_name: Joi.string().required(),
         sub_cat_id: Joi.string().required(),
-        subjects_id: Joi.array().items(Joi.string()).min().required(),
         repeat: Joi.string().valid(
             'never',
             '5 mins',
@@ -64,7 +69,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
         sch_time: Joi.string().regex(/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/)
             .message('Invalid date-time format. Please use DD-MM-YYYY HH:mm:ss').required(),
-        rules: Joi.array().items(Joi.string()).min().required()
+        rules: Joi.array().items(Joi.string()).min(1).required()
     });
 
     const { error } = await schema.validateAsync(req.body);
@@ -78,7 +83,6 @@ let createTriviaQuizz = async (req, res, next) => {
         throw new CreateError("FileUploadError", "upload the banner for the quiz")
     }
 
-    // return console.log(file_access);
 
     let {
         category_id,
@@ -89,56 +93,14 @@ let createTriviaQuizz = async (req, res, next) => {
         time_per_ques,
         min_reward_per,
         reward,
-        rules, quiz_name, sch_time, repeat
+        rules,
+        quiz_name,
+        sch_time,
+        repeat
     } =
         req.body
 
-
-
-    question_composition = JSON.parse(question_composition)
-    // return console.log(question_composition);
-
-    // const schema = Joi.object({
-    //     category_id: Joi.string().required(),
-    //     sub_cat_id: Joi.string().required(),
-    //     subjects_id: Joi.string().required(),
-    //     question_composition: Joi.array().items(
-    //         Joi.object().pattern(Joi.string(), Joi.number().integer().min(0))
-    //       ).required().custom(customValidator).messages({
-    //         'any.invalid': 'The sum of counts in each question composition object should be 100'
-    //       }),
-    //     total_num_of_quest: Joi.number().min(0).max(500).required(),
-    //     time_per_ques: Joi.number().required(),
-    //     min_reward_per: Joi.number().required(),
-    //     reward: Joi.number().min(0).max(500).required(),
-    //     rules: Joi.string().required(),
-    // });
-
-    // const { error } = await schema.validateAsync( 
-    //     category_id,
-    //     sub_cat_id,
-    //     subjects_id,
-    //     question_composition,
-    //     total_num_of_quest,
-    //     time_per_ques,
-    //     min_reward_per,
-    //     reward,
-    //     rules
-    //     );
-
-    // let file_access = req.file;
-
-    // return console.log(file_access);
-
-
-
-
     sch_time = moment(sch_time, 'DD-MM-YYYY HH:mm:ss').valueOf();
-
-
-
-    // return console.log(subjects_id,question_composition);
-
 
     const keys = Object.keys(data.question_composition);
     console.log(keys)
@@ -241,7 +203,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
 
 
-
+    var channel = await connectToRabbitMQ()
 
 
     var blobName = "img/" + Date.now() + '-' + file_access.originalname;
@@ -336,8 +298,8 @@ let getQuizz = async (req, res, next) => {
     //     const formattedDate = moment(datew).format('DD-MM-YYYY HH:mm:ss');
 
     //    return console.log(formattedDate);
- await schema.validateAsync(req.query);
-    
+    await schema.validateAsync(req.query);
+
 
     var { searchQuery, page, limit, fromDate, toDate } = req.query;
     page = parseInt(page);
@@ -1186,7 +1148,7 @@ let updateStatus = async (req, res, next) => {
     return res.send({ status: 1, message: "successfuly updated" })
 }
 
-var view_history_of_trivia_quiz=async(req,res)=>{
+var view_history_of_trivia_quiz = async (req, res) => {
     const schema = Joi.object({
         quiz_id: Joi.string().required(),
         fromDate: Joi.string().allow(''),
@@ -1195,11 +1157,11 @@ var view_history_of_trivia_quiz=async(req,res)=>{
 
     });
 
- 
-    
 
-    var {  fromDate, toDate } = req.body;
-   
+
+
+    var { fromDate, toDate } = req.body;
+
 
     fromDate = fromDate + ' 00:01:00';
     toDate = toDate + ' 23:59:59';
@@ -1211,14 +1173,14 @@ var view_history_of_trivia_quiz=async(req,res)=>{
 
     const { error } = await schema.validateAsync(req.body);
 
-    const{quiz_id}=req.body;
+    const { quiz_id } = req.body;
 
 
 
     let data2 = await SubTriviaQuiz.aggregate([
         {
             $match: {
-                Trivia_Quiz_Id:new mongoose.Types.ObjectId(quiz_id),
+                Trivia_Quiz_Id: new mongoose.Types.ObjectId(quiz_id),
                 sch_time: { $gte: fromDate, $lte: toDate }
             }
         },
@@ -1255,7 +1217,7 @@ var view_history_of_trivia_quiz=async(req,res)=>{
     ]);
 
 
-    res.send({status:1,data2})
+    res.send({ status: 1, data2 })
 
 
 
