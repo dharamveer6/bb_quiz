@@ -1108,14 +1108,101 @@ let chnageBanner = async (req, res, next) => {
 
 }
 
+let changeRules = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        rules: Joi.array().required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, rules } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { rules: rules })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+let updateReward = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        reward: Joi.number().max(500).required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, reward } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { reward })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+let changeTimePerQues = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        time_per_question: Joi.number().required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, time_per_question } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { time_per_question })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+
+let updateStatus = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        repeat: Joi.string().valid(
+            'never',
+            '5 mins',
+            '15 mins',
+            '30 mins',
+            '45 mins',
+            '1 hrs',
+            '2 hrs',
+            '3 hrs',
+            '6 hrs',
+            '1 days',
+            '2 days',
+            '3 days',
+            '1 week',
+            '2 week',
+            '1 month',
+            '2 month',
+            '3 month',
+            '6 month',
+            '1 year'
+        ).required(),
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, repeat } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { repeat })
+    return res.send({ status: 1, message: "successfuly updated" })
 
 
 
 
+}
+
+
+
+updateStatus = trycatch(updateStatus)
+changeRules = trycatch(changeRules)
+updateReward = trycatch(updateReward)
+changeTimePerQues = trycatch(changeTimePerQues)
 
 createTriviaQuizz = trycatch(createTriviaQuizz);
 getQuizz = trycatch(getQuizz)
 viewDetails = trycatch(viewDetails)
 chnageBanner = trycatch(chnageBanner)
 
-module.exports = { createTriviaQuizz, getQuizz, viewDetails, chnageBanner }
+module.exports = { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus }
