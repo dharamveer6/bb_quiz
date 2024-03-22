@@ -1187,10 +1187,6 @@ let updateStatus = async (req, res, next) => {
 
     const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { repeat })
     return res.send({ status: 1, message: "successfuly updated" })
-
-
-
-
 }
 
 
