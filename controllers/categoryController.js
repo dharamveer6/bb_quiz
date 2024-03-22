@@ -23,7 +23,7 @@ var addCategory = async (req, res, next) => {
     const { sub_categories, category_name } = req.body;
     // console.log(typeof(sub_categories))
 
-    sub_categories_array = JSON.parse(sub_categories)
+    var sub_categories_array = JSON.parse(sub_categories)
 
     if (!req.file) {
         throw new CreateError("FileUploadError", "image should not be empty")
