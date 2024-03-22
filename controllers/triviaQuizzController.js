@@ -336,11 +336,8 @@ let getQuizz = async (req, res, next) => {
     //     const formattedDate = moment(datew).format('DD-MM-YYYY HH:mm:ss');
 
     //    return console.log(formattedDate);
-
-    const { error } = await schema.validateAsync(req.query);
-    if (error) {
-        return res.status(400).send({ error: error.details[0].message });
-    }
+ await schema.validateAsync(req.query);
+    
 
     var { searchQuery, page, limit, fromDate, toDate } = req.query;
     page = parseInt(page);
@@ -1188,6 +1185,86 @@ let updateStatus = async (req, res, next) => {
     const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { repeat })
     return res.send({ status: 1, message: "successfuly updated" })
 }
+
+var view_history_of_trivia_quiz=async(req,res)=>{
+    const schema = Joi.object({
+        quiz_id: Joi.string().required(),
+        fromDate: Joi.string().allow(''),
+        toDate: Joi.string().allow(''),
+
+
+    });
+
+ 
+    
+
+    var {  fromDate, toDate } = req.body;
+   
+
+    fromDate = fromDate + ' 00:01:00';
+    toDate = toDate + ' 23:59:59';
+
+    fromDate = moment(fromDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+    toDate = moment(toDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+
+
+
+    const { error } = await schema.validateAsync(req.body);
+
+    const{quiz_id}=req.body;
+
+
+
+    let data2 = await SubTriviaQuiz.aggregate([
+        {
+            $match: {
+                Trivia_Quiz_Id:new mongoose.Types.ObjectId(quiz_id),
+                sch_time: { $gte: fromDate, $lte: toDate }
+            }
+        },
+        {
+            $lookup: {
+                from: "Result_Subtrivias",
+                let: { subtrivia_id: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$subtrivia_id", "$$subtrivia_id"] },
+                                    { $eq: ["$is_attempted", 1] }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                as: "result_subtrivias"
+            }
+        },
+        {
+            $addFields: {
+                total_attempted: { $size: "$result_subtrivias" },
+                total_reward: { $sum: "$result_subtrivias.reward" }
+            }
+        },
+        {
+            $project: {
+                result_subtrivias: 0 // Exclude the result_subtrivias array from the output
+            }
+        }
+    ]);
+
+
+    res.send({status:1,data2})
+
+
+
+
+
+
+}
+
+
 
 
 

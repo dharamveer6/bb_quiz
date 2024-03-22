@@ -144,8 +144,17 @@ const secondsToAdd = (data.total_num_of_quest*data.time_per_question)+30; // Cha
 const end_time = moment(start_time).add(secondsToAdd, 'seconds').valueOf();
 
 
-const save_tivia=await  Result_Subtrivia({end_time,start_time,cor_ans:ans,questions:question,participant_id,subtrivia_id})
-await save_tivia.save()
+const result = await Result_Subtrivia.findOneAndUpdate(
+    { participant_id: participant_id, subtrivia_id: subtrivia_id },
+    { $set: { end_time: end_time, start_time: start_time, cor_ans: ans, questions: question,participant_id: participant_id, subtrivia_id: subtrivia_id } },
+    { upsert: true, new: true }
+);
+
+// If you need to perform additional processing after updating or inserting the document
+// (e.g., checking whether the condition was met), you can do so here
+
+// Save the document
+await result.save();
 
 
 
@@ -247,7 +256,7 @@ var submmit_triviaquiz=async(req,res,next)=>{
         arr:{correct,
           incorrect,
           unattempt,
-          submit_time_period}
+          submit_time_period,is_attemped:1}
         });
       } else {
        
@@ -260,7 +269,7 @@ var submmit_triviaquiz=async(req,res,next)=>{
           arr:{ correct,
             incorrect,
             unattempt,
-            submit_time_period}
+            submit_time_period,is_attemped:1}
          
         });
       }

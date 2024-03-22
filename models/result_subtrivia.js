@@ -28,6 +28,7 @@ const Result_Subtrivias = new Schema({
     reward: { type: Number },
     obtain_persentage: { type: Number },
     marks: { type: Number },
+    is_attempted: { type: Number,default:0 },
     
     
 });
