@@ -336,11 +336,8 @@ let getQuizz = async (req, res, next) => {
     //     const formattedDate = moment(datew).format('DD-MM-YYYY HH:mm:ss');
 
     //    return console.log(formattedDate);
-
-    const { error } = await schema.validateAsync(req.query);
-    if (error) {
-        return res.status(400).send({ error: error.details[0].message });
-    }
+ await schema.validateAsync(req.query);
+    
 
     var { searchQuery, page, limit, fromDate, toDate } = req.query;
     page = parseInt(page);
@@ -1083,18 +1080,37 @@ var change_no_question_for_quiz=async(req,res,next)=>{
 var view_history_of_trivia_quiz=async(req,res)=>{
     const schema = Joi.object({
         quiz_id: Joi.string().required(),
+        fromDate: Joi.string().allow(''),
+        toDate: Joi.string().allow(''),
+
 
     });
+
+ 
+    
+
+    var {  fromDate, toDate } = req.body;
+   
+
+    fromDate = fromDate + ' 00:01:00';
+    toDate = toDate + ' 23:59:59';
+
+    fromDate = moment(fromDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+    toDate = moment(toDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+
+
 
     const { error } = await schema.validateAsync(req.body);
 
     const{quiz_id}=req.body;
 
 
+
     let data2 = await SubTriviaQuiz.aggregate([
         {
             $match: {
-                Trivia_Quiz_Id:new mongoose.Types.ObjectId(quiz_id)
+                Trivia_Quiz_Id:new mongoose.Types.ObjectId(quiz_id),
+                sch_time: { $gte: fromDate, $lte: toDate }
             }
         },
         {
