@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const { trycatch } = require('../utils/tryCatch');
 
-const { connectToRabbitMQ } = require('../rabbit_config');
+const { connectToRabbibannertMQ, connectToRabbitMQ } = require('../rabbit_config');
 const Question = require('../models/questionmodel');
 const { mongoose, Mongoose } = require('mongoose');
 const Subject = require('../models/subjectmodel');
@@ -18,9 +18,9 @@ let createTriviaQuizz = async (req, res, next) => {
 
 
 
-    req.body.question_composition=JSON.parse(req.body.question_composition)
-    req.body.rules=JSON.parse(req.body.rules)
-    req.body.subjects_id=JSON.parse(req.body.subjects_id)
+    req.body.question_composition = JSON.parse(req.body.question_composition)
+    req.body.rules = JSON.parse(req.body.rules)
+    req.body.subjects_id = JSON.parse(req.body.subjects_id)
 
 
     var data = req.body
@@ -30,7 +30,7 @@ let createTriviaQuizz = async (req, res, next) => {
         quiz_name: Joi.string().required(),
         quiz_name: Joi.string().required(),
         sub_cat_id: Joi.string().required(),
-        subjects_id:Joi.array().items(Joi.string()).min().required(),
+        subjects_id: Joi.array().items(Joi.string()).min().required(),
         repeat: Joi.string().valid(
             'never',
             '5 mins',
@@ -61,10 +61,10 @@ let createTriviaQuizz = async (req, res, next) => {
         time_per_ques: Joi.number().required(),
         reward: Joi.number().max(500).required(),
         min_reward_per: Joi.number().max(100).required(),
-     
-        sch_time:Joi.string().regex(/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/)
-        .message('Invalid date-time format. Please use DD-MM-YYYY HH:mm:ss').required(),
-        rules:Joi.array().items(Joi.string()).min().required()
+
+        sch_time: Joi.string().regex(/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/)
+            .message('Invalid date-time format. Please use DD-MM-YYYY HH:mm:ss').required(),
+        rules: Joi.array().items(Joi.string()).min().required()
     });
 
     const { error } = await schema.validateAsync(req.body);
@@ -246,7 +246,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
     var blobName = "img/" + Date.now() + '-' + file_access.originalname;
 
-        const sen2 = JSON.stringify({ blobName, file_access })
+    const sen2 = JSON.stringify({ blobName, file_access })
 
     channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
     console.log("send to queue")
@@ -549,532 +549,645 @@ let viewDetails = async (req, res, next) => {
 
 }
 
-var change_category_of_quiz=async(req,res,next)=>{
+var change_category_of_quiz = async (req, res, next) => {
     const schema = Joi.object({
         quiz_id: Joi.string().required(),
         category_id: Joi.string().required(),
-        subjects_id:Joi.array().items(Joi.string()).min(1).required(),
+        subjects_id: Joi.array().items(Joi.string()).min(1).required(),
         sub_cat_id: Joi.string().required(),
         question_composition: Joi.object().pattern(
             Joi.string().required(),
             Joi.number().integer().max(100).min(0).required()
-          ).max(10).required()
+        ).max(10).required()
 
-       
+
     });
 
     const { error } = await schema.validateAsync(req.body);
 
-    const{quiz_id,category_id,subjects_id,sub_cat_id,question_composition}=req.body
+    const { quiz_id, category_id, subjects_id, sub_cat_id, question_composition } = req.body
 
 
-    var data=req.body
+    var data = req.body
 
 
-    var {total_num_of_quest:numberofquestion}=await TriviaQuiz.findOne({_id:new mongoose.Types.ObjectId(quiz_id)})
+    var { total_num_of_quest: numberofquestion } = await TriviaQuiz.findOne({ _id: new mongoose.Types.ObjectId(quiz_id) })
 
 
 
-    
+
     const keys = Object.keys(data.question_composition);
     console.log(keys)
     const count = keys.length;
 
-    let check=0;
+    let check = 0;
 
-    var remain_question=0
+    var remain_question = 0
 
-    var question=[];
+    var question = [];
 
-    var ans=[];
+    var ans = [];
     console.log(data.question_composition);
 
-    var check_pers=0;
+    var check_pers = 0;
 
-    for(let i in data.question_composition){
-     const persentage = data.question_composition[i];
+    for (let i in data.question_composition) {
+        const persentage = data.question_composition[i];
 
-     check_pers+=data.question_composition[i]
-
-    }
-
-    console.log(check_pers,"check pers")
-    console.log(check_pers==100,"ck cond")
-
-    if(check_pers == 100  ){
-
-    console.log("next")
+        check_pers += data.question_composition[i]
 
     }
-    else{
-     throw new CreateError("CustomError",`total persent is ${check_pers} make sure you persent will 100`)
+
+    console.log(check_pers, "check pers")
+    console.log(check_pers == 100, "ck cond")
+
+    if (check_pers == 100) {
+
+        console.log("next")
+
+    }
+    else {
+        throw new CreateError("CustomError", `total persent is ${check_pers} make sure you persent will 100`)
     }
 
 
     for (let i in data.question_composition) {
         console.log(i)
         check++;
-       
-       
+
+
         const persentage = data.question_composition[i];
-        
-        
 
 
-       
+
+
+
         // console.log(persentage);
-        var single_tag_quest =Math.floor(persentage / 100 * numberofquestion);
-        
+        var single_tag_quest = Math.floor(persentage / 100 * numberofquestion);
 
-        remain_question+=single_tag_quest
-        
 
-        if(check == count){
-          const data=numberofquestion-remain_question;
-         
-          single_tag_quest+=data
+        remain_question += single_tag_quest
+
+
+        if (check == count) {
+            const data = numberofquestion - remain_question;
+
+            single_tag_quest += data
 
         }
 
-        
-
-  
-
-          const ques=await Question.find({sub_id:new mongoose.Types.ObjectId(i),is_del:0})
-
-          const {sub_name:topic_name} =await Subject.findOne({_id:new mongoose.Types.ObjectId(i)})
-
-        
-
-          console.log(single_tag_quest,topic_name)
-
-          que_len=ques.length;
-        
-          if(que_len<single_tag_quest){
-            throw new CreateError("CustomError",`${topic_name} has tag has not sufficient question`)
-          }
-        
 
 
 
 
-          const que = await Question.aggregate([
-            { $match: { sub_id:new mongoose.Types.ObjectId(i), is_del: 0 } },
+        const ques = await Question.find({ sub_id: new mongoose.Types.ObjectId(i), is_del: 0 })
+
+        const { sub_name: topic_name } = await Subject.findOne({ _id: new mongoose.Types.ObjectId(i) })
+
+
+
+        console.log(single_tag_quest, topic_name)
+
+        que_len = ques.length;
+
+        if (que_len < single_tag_quest) {
+            throw new CreateError("CustomError", `${topic_name} has tag has not sufficient question`)
+        }
+
+
+
+
+
+        const que = await Question.aggregate([
+            { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
             { $sample: { size: single_tag_quest } }
         ]);
 
         for (let i of que) {
-          question = [...question, i._id];
-          ans = [...ans, i.ans];
+            question = [...question, i._id];
+            ans = [...ans, i.ans];
         }
-     
 
-      if(question.length !== ans.length){
-        throw new CreateError("CustomError","question array and answer array is not same")
-      }
+
+        if (question.length !== ans.length) {
+            throw new CreateError("CustomError", "question array and answer array is not same")
+        }
     }
 
 
     await TriviaQuiz.updateOne(
-        { _id:new mongoose.Types.ObjectId(quiz_id)},
-        { $set: { category_id,subjects_id,sub_cat_id,question_composition} }
-      )
+        { _id: new mongoose.Types.ObjectId(quiz_id) },
+        { $set: { category_id, subjects_id, sub_cat_id, question_composition } }
+    )
 
 
 }
 
-var change_subcategory_of_quiz=async(req,res,next)=>{
+var change_subcategory_of_quiz = async (req, res, next) => {
     const schema = Joi.object({
         quiz_id: Joi.string().required(),
-       
-        subjects_id:Joi.array().items(Joi.string()).min(1).required(),
+
+        subjects_id: Joi.array().items(Joi.string()).min(1).required(),
         sub_cat_id: Joi.string().required(),
         question_composition: Joi.object().pattern(
             Joi.string().required(),
             Joi.number().integer().max(100).min(0).required()
-          ).max(10).required()
+        ).max(10).required()
 
-       
+
     });
 
     const { error } = await schema.validateAsync(req.body);
 
-    const{quiz_id,subjects_id,sub_cat_id,question_composition}=req.body
+    const { quiz_id, subjects_id, sub_cat_id, question_composition } = req.body
 
 
-    var data=req.body
+    var data = req.body
 
 
-    var {total_num_of_quest:numberofquestion}=await TriviaQuiz.findOne({_id:new mongoose.Types.ObjectId(quiz_id)})
+    var { total_num_of_quest: numberofquestion } = await TriviaQuiz.findOne({ _id: new mongoose.Types.ObjectId(quiz_id) })
 
 
 
-    
+
     const keys = Object.keys(data.question_composition);
     console.log(keys)
     const count = keys.length;
 
-    let check=0;
+    let check = 0;
 
-    var remain_question=0
+    var remain_question = 0
 
-    var question=[];
+    var question = [];
 
-    var ans=[];
+    var ans = [];
     console.log(data.question_composition);
 
-    var check_pers=0;
+    var check_pers = 0;
 
-    for(let i in data.question_composition){
-     const persentage = data.question_composition[i];
+    for (let i in data.question_composition) {
+        const persentage = data.question_composition[i];
 
-     check_pers+=data.question_composition[i]
-
-    }
-
-    console.log(check_pers,"check pers")
-    console.log(check_pers==100,"ck cond")
-
-    if(check_pers == 100  ){
-
-    console.log("next")
+        check_pers += data.question_composition[i]
 
     }
-    else{
-     throw new CreateError("CustomError",`total persent is ${check_pers} make sure you persent will 100`)
+
+    console.log(check_pers, "check pers")
+    console.log(check_pers == 100, "ck cond")
+
+    if (check_pers == 100) {
+
+        console.log("next")
+
+    }
+    else {
+        throw new CreateError("CustomError", `total persent is ${check_pers} make sure you persent will 100`)
     }
 
 
     for (let i in data.question_composition) {
         console.log(i)
         check++;
-       
-       
+
+
         const persentage = data.question_composition[i];
-        
-        
 
 
-       
+
+
+
         // console.log(persentage);
-        var single_tag_quest =Math.floor(persentage / 100 * numberofquestion);
-        
+        var single_tag_quest = Math.floor(persentage / 100 * numberofquestion);
 
-        remain_question+=single_tag_quest
-        
 
-        if(check == count){
-          const data=numberofquestion-remain_question;
-         
-          single_tag_quest+=data
+        remain_question += single_tag_quest
+
+
+        if (check == count) {
+            const data = numberofquestion - remain_question;
+
+            single_tag_quest += data
 
         }
 
-        
-
-  
-
-          const ques=await Question.find({sub_id:new mongoose.Types.ObjectId(i),is_del:0})
-
-          const {sub_name:topic_name} =await Subject.findOne({_id:new mongoose.Types.ObjectId(i)})
-
-        
-
-          console.log(single_tag_quest,topic_name)
-
-          que_len=ques.length;
-        
-          if(que_len<single_tag_quest){
-            throw new CreateError("CustomError",`${topic_name} has tag has not sufficient question`)
-          }
-        
 
 
 
 
-          const que = await Question.aggregate([
-            { $match: { sub_id:new mongoose.Types.ObjectId(i), is_del: 0 } },
+        const ques = await Question.find({ sub_id: new mongoose.Types.ObjectId(i), is_del: 0 })
+
+        const { sub_name: topic_name } = await Subject.findOne({ _id: new mongoose.Types.ObjectId(i) })
+
+
+
+        console.log(single_tag_quest, topic_name)
+
+        que_len = ques.length;
+
+        if (que_len < single_tag_quest) {
+            throw new CreateError("CustomError", `${topic_name} has tag has not sufficient question`)
+        }
+
+
+
+
+
+        const que = await Question.aggregate([
+            { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
             { $sample: { size: single_tag_quest } }
         ]);
 
         for (let i of que) {
-          question = [...question, i._id];
-          ans = [...ans, i.ans];
+            question = [...question, i._id];
+            ans = [...ans, i.ans];
         }
-     
 
-      if(question.length !== ans.length){
-        throw new CreateError("CustomError","question array and answer array is not same")
-      }
+
+        if (question.length !== ans.length) {
+            throw new CreateError("CustomError", "question array and answer array is not same")
+        }
     }
 
 
     await TriviaQuiz.updateOne(
-        { _id:new mongoose.Types.ObjectId(quiz_id)},
-        { $set: { subjects_id,sub_cat_id,question_composition} }
-      )
+        { _id: new mongoose.Types.ObjectId(quiz_id) },
+        { $set: { subjects_id, sub_cat_id, question_composition } }
+    )
 
 }
 
-var change_subject_for_quiz=async(req,res,next)=>{
-        const schema = Joi.object({
+var change_subject_for_quiz = async (req, res, next) => {
+    const schema = Joi.object({
         quiz_id: Joi.string().required(),
-       
-        subjects_id:Joi.array().items(Joi.string()).min(1).required(),
-       
+
+        subjects_id: Joi.array().items(Joi.string()).min(1).required(),
+
         question_composition: Joi.object().pattern(
             Joi.string().required(),
             Joi.number().integer().max(100).min(0).required()
-          ).max(10).required()
+        ).max(10).required()
 
-       
+
     });
 
     const { error } = await schema.validateAsync(req.body);
 
-    const{quiz_id,subjects_id,question_composition}=req.body
+    const { quiz_id, subjects_id, question_composition } = req.body
 
 
-    var data=req.body
+    var data = req.body
 
 
-    var {total_num_of_quest:numberofquestion}=await TriviaQuiz.findOne({_id:new mongoose.Types.ObjectId(quiz_id)})
+    var { total_num_of_quest: numberofquestion } = await TriviaQuiz.findOne({ _id: new mongoose.Types.ObjectId(quiz_id) })
 
 
 
-    
+
     const keys = Object.keys(data.question_composition);
     console.log(keys)
     const count = keys.length;
 
-    let check=0;
+    let check = 0;
 
-    var remain_question=0
+    var remain_question = 0
 
-    var question=[];
+    var question = [];
 
-    var ans=[];
+    var ans = [];
     console.log(data.question_composition);
 
-    var check_pers=0;
+    var check_pers = 0;
 
-    for(let i in data.question_composition){
-     const persentage = data.question_composition[i];
+    for (let i in data.question_composition) {
+        const persentage = data.question_composition[i];
 
-     check_pers+=data.question_composition[i]
-
-    }
-
-    console.log(check_pers,"check pers")
-    console.log(check_pers==100,"ck cond")
-
-    if(check_pers == 100  ){
-
-    console.log("next")
+        check_pers += data.question_composition[i]
 
     }
-    else{
-     throw new CreateError("CustomError",`total persent is ${check_pers} make sure you persent will 100`)
+
+    console.log(check_pers, "check pers")
+    console.log(check_pers == 100, "ck cond")
+
+    if (check_pers == 100) {
+
+        console.log("next")
+
+    }
+    else {
+        throw new CreateError("CustomError", `total persent is ${check_pers} make sure you persent will 100`)
     }
 
 
     for (let i in data.question_composition) {
         console.log(i)
         check++;
-       
-       
+
+
         const persentage = data.question_composition[i];
-        
-        
 
 
-       
+
+
+
         // console.log(persentage);
-        var single_tag_quest =Math.floor(persentage / 100 * numberofquestion);
-        
+        var single_tag_quest = Math.floor(persentage / 100 * numberofquestion);
 
-        remain_question+=single_tag_quest
-        
 
-        if(check == count){
-          const data=numberofquestion-remain_question;
-         
-          single_tag_quest+=data
+        remain_question += single_tag_quest
+
+
+        if (check == count) {
+            const data = numberofquestion - remain_question;
+
+            single_tag_quest += data
 
         }
 
-        
-
-  
-
-          const ques=await Question.find({sub_id:new mongoose.Types.ObjectId(i),is_del:0})
-
-          const {sub_name:topic_name} =await Subject.findOne({_id:new mongoose.Types.ObjectId(i)})
-
-        
-
-          console.log(single_tag_quest,topic_name)
-
-          que_len=ques.length;
-        
-          if(que_len<single_tag_quest){
-            throw new CreateError("CustomError",`${topic_name} has tag has not sufficient question`)
-          }
-        
 
 
 
 
-          const que = await Question.aggregate([
-            { $match: { sub_id:new mongoose.Types.ObjectId(i), is_del: 0 } },
+        const ques = await Question.find({ sub_id: new mongoose.Types.ObjectId(i), is_del: 0 })
+
+        const { sub_name: topic_name } = await Subject.findOne({ _id: new mongoose.Types.ObjectId(i) })
+
+
+
+        console.log(single_tag_quest, topic_name)
+
+        que_len = ques.length;
+
+        if (que_len < single_tag_quest) {
+            throw new CreateError("CustomError", `${topic_name} has tag has not sufficient question`)
+        }
+
+
+
+
+
+        const que = await Question.aggregate([
+            { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
             { $sample: { size: single_tag_quest } }
         ]);
 
         for (let i of que) {
-          question = [...question, i._id];
-          ans = [...ans, i.ans];
+            question = [...question, i._id];
+            ans = [...ans, i.ans];
         }
-     
 
-      if(question.length !== ans.length){
-        throw new CreateError("CustomError","question array and answer array is not same")
-      }
+
+        if (question.length !== ans.length) {
+            throw new CreateError("CustomError", "question array and answer array is not same")
+        }
     }
 
 
     await TriviaQuiz.updateOne(
-        { _id:new mongoose.Types.ObjectId(quiz_id)},
-        { $set: { subjects_id,question_composition} }
-      )
+        { _id: new mongoose.Types.ObjectId(quiz_id) },
+        { $set: { subjects_id, question_composition } }
+    )
 
 }
 
-var change_no_question_for_quiz=async(req,res,next)=>{
+var change_no_question_for_quiz = async (req, res, next) => {
     const schema = Joi.object({
         quiz_id: Joi.string().required(),
-        numberofquestion:Joi.number().integer().required()
-       
-       
+        numberofquestion: Joi.number().integer().required()
+
+
     });
 
     const { error } = await schema.validateAsync(req.body);
 
-    const{quiz_id,numberofquestion}=req.body
+    const { quiz_id, numberofquestion } = req.body
 
 
-    var data=req.body
+    var data = req.body
 
 
-    var {question_composition}=await TriviaQuiz.findOne({_id:new mongoose.Types.ObjectId(quiz_id)})
+    var { question_composition } = await TriviaQuiz.findOne({ _id: new mongoose.Types.ObjectId(quiz_id) })
 
-    data.question_composition=question_composition
+    data.question_composition = question_composition
 
 
 
-    
+
     const keys = Object.keys(data.question_composition);
     console.log(keys)
     const count = keys.length;
 
-    let check=0;
+    let check = 0;
 
-    var remain_question=0
+    var remain_question = 0
 
-    var question=[];
+    var question = [];
 
-    var ans=[];
+    var ans = [];
     console.log(data.question_composition);
 
-    var check_pers=0;
+    var check_pers = 0;
 
-    for(let i in data.question_composition){
-     const persentage = data.question_composition[i];
+    for (let i in data.question_composition) {
+        const persentage = data.question_composition[i];
 
-     check_pers+=data.question_composition[i]
-
-    }
-
-    console.log(check_pers,"check pers")
-    console.log(check_pers==100,"ck cond")
-
-    if(check_pers == 100  ){
-
-    console.log("next")
+        check_pers += data.question_composition[i]
 
     }
-    else{
-     throw new CreateError("CustomError",`total persent is ${check_pers} make sure you persent will 100`)
+
+    console.log(check_pers, "check pers")
+    console.log(check_pers == 100, "ck cond")
+
+    if (check_pers == 100) {
+
+        console.log("next")
+
+    }
+    else {
+        throw new CreateError("CustomError", `total persent is ${check_pers} make sure you persent will 100`)
     }
 
 
     for (let i in data.question_composition) {
         console.log(i)
         check++;
-       
-       
+
+
         const persentage = data.question_composition[i];
-        
-        
 
 
-       
+
+
+
         // console.log(persentage);
-        var single_tag_quest =Math.floor(persentage / 100 * numberofquestion);
-        
+        var single_tag_quest = Math.floor(persentage / 100 * numberofquestion);
 
-        remain_question+=single_tag_quest
-        
 
-        if(check == count){
-          const data=numberofquestion-remain_question;
-         
-          single_tag_quest+=data
+        remain_question += single_tag_quest
+
+
+        if (check == count) {
+            const data = numberofquestion - remain_question;
+
+            single_tag_quest += data
 
         }
 
-        
-
-  
-
-          const ques=await Question.find({sub_id:new mongoose.Types.ObjectId(i),is_del:0})
-
-          const {sub_name:topic_name} =await Subject.findOne({_id:new mongoose.Types.ObjectId(i)})
-
-        
-
-          console.log(single_tag_quest,topic_name)
-
-          que_len=ques.length;
-        
-          if(que_len<single_tag_quest){
-            throw new CreateError("CustomError",`${topic_name} has tag has not sufficient question`)
-          }
-        
 
 
 
 
-          const que = await Question.aggregate([
-            { $match: { sub_id:new mongoose.Types.ObjectId(i), is_del: 0 } },
+        const ques = await Question.find({ sub_id: new mongoose.Types.ObjectId(i), is_del: 0 })
+
+        const { sub_name: topic_name } = await Subject.findOne({ _id: new mongoose.Types.ObjectId(i) })
+
+
+
+        console.log(single_tag_quest, topic_name)
+
+        que_len = ques.length;
+
+        if (que_len < single_tag_quest) {
+            throw new CreateError("CustomError", `${topic_name} has tag has not sufficient question`)
+        }
+
+
+
+
+
+        const que = await Question.aggregate([
+            { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
             { $sample: { size: single_tag_quest } }
         ]);
 
         for (let i of que) {
-          question = [...question, i._id];
-          ans = [...ans, i.ans];
+            question = [...question, i._id];
+            ans = [...ans, i.ans];
         }
-     
 
-      if(question.length !== ans.length){
-        throw new CreateError("CustomError","question array and answer array is not same")
-      }
+
+        if (question.length !== ans.length) {
+            throw new CreateError("CustomError", "question array and answer array is not same")
+        }
     }
 
 
     await TriviaQuiz.updateOne(
-        { _id:new mongoose.Types.ObjectId(quiz_id)},
-        { $set: {total_num_of_quest:numberofquestion} }
-      )
+        { _id: new mongoose.Types.ObjectId(quiz_id) },
+        { $set: { total_num_of_quest: numberofquestion } }
+    )
+}
+
+let chnageBanner = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let file_access = req.file;
+    let { id } = req.body
+
+    if (!req.file) {
+        throw new CreateError("FileUploadError", "upload the banner for the quiz")
+    }
+
+    var blobName = "img/" + Date.now() + '-' + file_access.originalname;
+
+    const sen2 = JSON.stringify({ blobName, file_access })
+    var channel = await connectToRabbitMQ()
+
+    channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
+    console.log("send to queue");
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { banner: blobName })
+    res.send({ status: 1, message: "successfuly updated" })
+
+}
+
+let changeRules = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        rules: Joi.array().required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, rules } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { rules: rules })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+let updateReward = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        reward: Joi.number().max(500).required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, reward } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { reward })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+let changeTimePerQues = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        time_per_question: Joi.number().required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, time_per_question } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { time_per_question })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+
+let updateStatus = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        repeat: Joi.string().valid(
+            'never',
+            '5 mins',
+            '15 mins',
+            '30 mins',
+            '45 mins',
+            '1 hrs',
+            '2 hrs',
+            '3 hrs',
+            '6 hrs',
+            '1 days',
+            '2 days',
+            '3 days',
+            '1 week',
+            '2 week',
+            '1 month',
+            '2 month',
+            '3 month',
+            '6 month',
+            '1 year'
+        ).required(),
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, repeat } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { repeat })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+
+
+
 }
 
 var view_history_of_trivia_quiz=async(req,res)=>{
@@ -1159,10 +1272,14 @@ var view_history_of_trivia_quiz=async(req,res)=>{
 
 
 
-
+updateStatus = trycatch(updateStatus)
+changeRules = trycatch(changeRules)
+updateReward = trycatch(updateReward)
+changeTimePerQues = trycatch(changeTimePerQues)
 
 createTriviaQuizz = trycatch(createTriviaQuizz);
 getQuizz = trycatch(getQuizz)
 viewDetails = trycatch(viewDetails)
+chnageBanner = trycatch(chnageBanner)
 
-module.exports = { createTriviaQuizz, getQuizz, viewDetails }
+module.exports = { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus }
