@@ -25,9 +25,9 @@ const Result_Subtrivias = new Schema({
     start_time: { type: Number },
     end_time: { type: Number },
     submit_time_period: { type: Number },
-    reward: { type: Number },
-    obtain_persentage: { type: Number },
-    marks: { type: Number },
+    reward: { type: Number,default:0 },
+    obtain_persentage: { type: Number,default:0 },
+    marks: { type: Number,default:0 },
     is_attempted: { type: Number,default:0 },
     
     

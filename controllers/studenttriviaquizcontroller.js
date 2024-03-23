@@ -15,7 +15,7 @@ const Result_Subtrivia = require('../models/result_subtrivia.js');
 
 var join_quiz_by_student=async(req,res,next)=>{
     const schema = Joi.object({
-        sub_trivia_id: Joi.string().max(250).required(),
+      subtrivia_id: Joi.string().max(250).required(),
         participant_id: Joi.string().required(),
 
 
@@ -26,28 +26,39 @@ var join_quiz_by_student=async(req,res,next)=>{
     const { subtrivia_id, participant_id } = req.body;
 
     const data=await SubTriviaQuiz.findOne({
-        _id: new mongoose.Types.ObjectId(sub_trivia_id),
+        _id: new mongoose.Types.ObjectId(subtrivia_id),
       });
 
       let count=0
       var question=[];
+      var check=0
+      var remain_question=0
 
       var ans=[];
 
+      var stu_ans=[]
+
+      console.log(data.question_composition)
+
+      const question_composition2 = Object.fromEntries(data.question_composition.entries());
+
+      console.log(question_composition2)
 
 
-      for (let i in data.question_composition) {
+
+      for (let i in question_composition2) {
+
         console.log(i)
         check++;
        
        
-        const persentage = data.question_composition[i];
+        const persentage = question_composition2[i];
         
         
 
 
        
-        // console.log(persentage);
+        console.log(data.total_num_of_quest,"total no of questions");
         var single_tag_quest =Math.floor(persentage / 100 * data.total_num_of_quest);
         
 
@@ -60,6 +71,8 @@ var join_quiz_by_student=async(req,res,next)=>{
           single_tag_quest+=data
 
         }
+
+        console.log(single_tag_quest,"sin")
 
         
 
@@ -88,11 +101,13 @@ var join_quiz_by_student=async(req,res,next)=>{
                 $project: {
                   // Include or exclude as needed
                     sub_id: 0, // Include or exclude as needed
-                    is_del: 0 ,// Include or exclude as needed
-                    ans: 0 ,// Include or exclude as needed
+                  
+                   // Include or exclude as needed
                 }
             }
         ]);
+
+        console.log(que,"questions")
 
         const val2=single_tag_quest-que.length;
 
@@ -115,8 +130,8 @@ var join_quiz_by_student=async(req,res,next)=>{
                     $project: {
                       // Include or exclude as needed
                         sub_id: 0, // Include or exclude as needed
-                        is_del: 0 ,// Include or exclude as needed
-                        ans: 0 ,// Include or exclude as needed
+                       // Include or exclude as needed
+                        // Include or exclude as needed
                     }
                 }
             ]);
@@ -128,6 +143,7 @@ var join_quiz_by_student=async(req,res,next)=>{
         for (let i of que) {
           question = [...question, i._id];
           ans = [...ans, i.ans];
+          stu_ans.push(-1)
         }
      
 
@@ -139,14 +155,16 @@ var join_quiz_by_student=async(req,res,next)=>{
 
     const start_time=moment().valueOf()
 
-
+console.log(data.total_num_of_quest)
+console.log(data.time_per_question)
+console.log("hey")
 const secondsToAdd = (data.total_num_of_quest*data.time_per_question)+30; // Change this to the number of seconds you want to add
 const end_time = moment(start_time).add(secondsToAdd, 'seconds').valueOf();
 
 
 const result = await Result_Subtrivia.findOneAndUpdate(
     { participant_id: participant_id, subtrivia_id: subtrivia_id },
-    { $set: { end_time: end_time, start_time: start_time, cor_ans: ans, questions: question,participant_id: participant_id, subtrivia_id: subtrivia_id } },
+    { $set: {stu_ans,is_attempted:1, end_time: end_time, start_time: start_time, cor_ans: ans, questions: question,participant_id: participant_id, subtrivia_id: subtrivia_id ,stu_ans,submit_time_period:secondsToAdd} },
     { upsert: true, new: true }
 );
 
@@ -159,7 +177,7 @@ await result.save();
 
 
 
-res.send({status:1,que,timeperiod:secondsToAdd})
+res.send({status:1,que,timeperiod:secondsToAdd,stu_ans})
 
 
 
@@ -275,3 +293,10 @@ var submmit_triviaquiz=async(req,res,next)=>{
       }
 
 }
+
+join_quiz_by_student=trycatch(join_quiz_by_student);
+submmit_triviaquiz=trycatch(submmit_triviaquiz);
+
+module.exports={join_quiz_by_student,submmit_triviaquiz}
+
+
