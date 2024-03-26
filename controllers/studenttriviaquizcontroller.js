@@ -13,10 +13,10 @@ const Result_Subtrivia = require('../models/result_subtrivia.js');
 
 
 
-var join_quiz_by_student = async (req, res, next) => {
-  const schema = Joi.object({
-    sub_trivia_id: Joi.string().max(250).required(),
-    participant_id: Joi.string().required(),
+var join_quiz_by_student=async(req,res,next)=>{
+    const schema = Joi.object({
+      subtrivia_id: Joi.string().max(250).required(),
+        participant_id: Joi.string().required(),
 
 
   });
@@ -25,45 +25,137 @@ var join_quiz_by_student = async (req, res, next) => {
 
   const { subtrivia_id, participant_id } = req.body;
 
-  const data = await SubTriviaQuiz.findOne({
-    _id: new mongoose.Types.ObjectId(sub_trivia_id),
-  });
+    const data=await SubTriviaQuiz.findOne({
+        _id: new mongoose.Types.ObjectId(subtrivia_id),
+      });
 
-  let count = 0
-  var question = [];
+      let count=0
+      var question=[];
+      var check=0
+      var remain_question=0
 
   var ans = [];
 
+      var stu_ans=[]
 
+      console.log(data.question_composition)
 
-  for (let i in data.question_composition) {
-    console.log(i)
-    check++;
+      const question_composition2 = Object.fromEntries(data.question_composition.entries());
 
-
-    const persentage = data.question_composition[i];
-
-
+      console.log(question_composition2)
 
 
 
-    // console.log(persentage);
-    var single_tag_quest = Math.floor(persentage / 100 * data.total_num_of_quest);
+      for (let i in question_composition2) {
+
+        console.log(i)
+        check++;
+       
+       
+        const persentage = question_composition2[i];
+        
+        
 
 
-    remain_question += single_tag_quest
+       
+        console.log(data.total_num_of_quest,"total no of questions");
+        var single_tag_quest =Math.floor(persentage / 100 * data.total_num_of_quest);
+        
+
+        remain_question+=single_tag_quest
+        
+
+        if(check == count){
+          const data=req.body.total_num_of_quest-remain_question;
+         
+          single_tag_quest+=data
+
+        }
+
+        console.log(single_tag_quest,"sin")
+
+        
+
+  
+
+         
+        
 
 
-    if (check == count) {
-      const data = req.body.total_num_of_quest - remain_question;
 
-      single_tag_quest += data
+        var que = await Question.aggregate([
+            // Stage 1: Match documents where is_del is 0
+            { 
+                $match: { 
+                    is_del: 0 
+                } 
+            },
+            // Stage 2: Sample `single_tag_quest` documents from the matched documents
+            { 
+                $sample: { 
+                    size: single_tag_quest 
+                } 
+            },
+            // Stage 3: Project specific fields
+            {
+                $project: {
+                  // Include or exclude as needed
+                    sub_id: 0, // Include or exclude as needed
+                  
+                   // Include or exclude as needed
+                }
+            }
+        ]);
+
+        console.log(que,"questions")
+
+        const val2=single_tag_quest-que.length;
+
+        if(val2>0){
+            const que2 = await Question.aggregate([
+                // Stage 1: Match documents where is_del is 0
+                { 
+                    $match: { 
+                        is_del: 1
+                    } 
+                },
+                // Stage 2: Sample `single_tag_quest` documents from the matched documents
+                { 
+                    $sample: { 
+                        size: val2 
+                    } 
+                },
+                // Stage 3: Project specific fields
+                {
+                    $project: {
+                      // Include or exclude as needed
+                        sub_id: 0, // Include or exclude as needed
+                       // Include or exclude as needed
+                        // Include or exclude as needed
+                    }
+                }
+            ]);
+
+            que=[...que,...que2]
+        }
+
+
+        for (let i of que) {
+          question = [...question, i._id];
+          ans = [...ans, i.ans];
+          stu_ans.push(-1)
+        }
+     
 
     }
 
 
 
-
+console.log(data.total_num_of_quest)
+console.log(data.time_per_question)
+console.log("hey")
+const secondsToAdd = (data.total_num_of_quest*data.time_per_question)+30; // Change this to the number of seconds you want to add
+const end_time = moment(start_time).add(secondsToAdd, 'seconds').valueOf();
 
 
 
@@ -146,7 +238,7 @@ var join_quiz_by_student = async (req, res, next) => {
 
   const result = await Result_Subtrivia.findOneAndUpdate(
     { participant_id: participant_id, subtrivia_id: subtrivia_id },
-    { $set: { end_time: end_time, start_time: start_time, cor_ans: ans, questions: question, participant_id: participant_id, subtrivia_id: subtrivia_id } },
+    { $set: {stu_ans,is_attempted:1, end_time: end_time, start_time: start_time, cor_ans: ans, questions: question,participant_id: participant_id, subtrivia_id: subtrivia_id ,stu_ans,submit_time_period:secondsToAdd} },
     { upsert: true, new: true }
   );
 
@@ -159,18 +251,12 @@ var join_quiz_by_student = async (req, res, next) => {
 
 
 
-  res.send({ status: 1, que, timeperiod: secondsToAdd })
+res.send({status:1,que,timeperiod:secondsToAdd,stu_ans})
 
 
 
 
 
-
-
-
-
-
-}
 
 
 var submmit_triviaquiz = async (req, res, next) => {
