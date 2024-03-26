@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const { trycatch } = require('../utils/tryCatch');
 
-const { connectToRabbitMQ } = require('../rabbit_config');
+const { connectToRabbibannertMQ, connectToRabbitMQ } = require('../rabbit_config');
 const Question = require('../models/questionmodel');
 const { mongoose, Mongoose } = require('mongoose');
 const Subject = require('../models/subjectmodel');
@@ -21,16 +21,21 @@ let createTriviaQuizz = async (req, res, next) => {
     req.body.question_composition = JSON.parse(req.body.question_composition)
     req.body.rules = JSON.parse(req.body.rules)
     req.body.subjects_id = JSON.parse(req.body.subjects_id)
+    req.body.total_num_of_quest = JSON.parse(req.body.total_num_of_quest)
+    // return console.log(req.body.total_num_of_quest);
+
+    req.body.time_per_ques = JSON.parse(req.body.time_per_ques)
+    req.body.reward = JSON.parse(req.body.reward)
+    req.body.min_reward_per = JSON.parse(req.body.min_reward_per)
 
 
     var data = req.body
+    // return console.log(0);
 
     const schema = Joi.object({
         category_id: Joi.string().required(),
         quiz_name: Joi.string().required(),
-        quiz_name: Joi.string().required(),
         sub_cat_id: Joi.string().required(),
-        subjects_id: Joi.array().items(Joi.string()).min().required(),
         repeat: Joi.string().valid(
             'never',
             '5 mins',
@@ -64,7 +69,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
         sch_time: Joi.string().regex(/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/)
             .message('Invalid date-time format. Please use DD-MM-YYYY HH:mm:ss').required(),
-        rules: Joi.array().items(Joi.string()).min().required()
+        rules: Joi.array().items(Joi.string()).min(1).required()
     });
 
     const { error } = await schema.validateAsync(req.body);
@@ -78,7 +83,6 @@ let createTriviaQuizz = async (req, res, next) => {
         throw new CreateError("FileUploadError", "upload the banner for the quiz")
     }
 
-    // return console.log(file_access);
 
     let {
         category_id,
@@ -89,56 +93,14 @@ let createTriviaQuizz = async (req, res, next) => {
         time_per_ques,
         min_reward_per,
         reward,
-        rules, quiz_name, sch_time, repeat
+        rules,
+        quiz_name,
+        sch_time,
+        repeat
     } =
         req.body
 
-
-
-    question_composition = JSON.parse(question_composition)
-    // return console.log(question_composition);
-
-    // const schema = Joi.object({
-    //     category_id: Joi.string().required(),
-    //     sub_cat_id: Joi.string().required(),
-    //     subjects_id: Joi.string().required(),
-    //     question_composition: Joi.array().items(
-    //         Joi.object().pattern(Joi.string(), Joi.number().integer().min(0))
-    //       ).required().custom(customValidator).messages({
-    //         'any.invalid': 'The sum of counts in each question composition object should be 100'
-    //       }),
-    //     total_num_of_quest: Joi.number().min(0).max(500).required(),
-    //     time_per_ques: Joi.number().required(),
-    //     min_reward_per: Joi.number().required(),
-    //     reward: Joi.number().min(0).max(500).required(),
-    //     rules: Joi.string().required(),
-    // });
-
-    // const { error } = await schema.validateAsync( 
-    //     category_id,
-    //     sub_cat_id,
-    //     subjects_id,
-    //     question_composition,
-    //     total_num_of_quest,
-    //     time_per_ques,
-    //     min_reward_per,
-    //     reward,
-    //     rules
-    //     );
-
-    // let file_access = req.file;
-
-    // return console.log(file_access);
-
-
-
-
     sch_time = moment(sch_time, 'DD-MM-YYYY HH:mm:ss').valueOf();
-
-
-
-    // return console.log(subjects_id,question_composition);
-
 
     const keys = Object.keys(data.question_composition);
     console.log(keys)
@@ -241,7 +203,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
 
 
-
+    var channel = await connectToRabbitMQ()
 
 
     var blobName = "img/" + Date.now() + '-' + file_access.originalname;
@@ -336,11 +298,8 @@ let getQuizz = async (req, res, next) => {
     //     const formattedDate = moment(datew).format('DD-MM-YYYY HH:mm:ss');
 
     //    return console.log(formattedDate);
+    await schema.validateAsync(req.query);
 
-    const { error } = await schema.validateAsync(req.query);
-    if (error) {
-        return res.status(400).send({ error: error.details[0].message });
-    }
 
     var { searchQuery, page, limit, fromDate, toDate } = req.query;
     page = parseInt(page);
@@ -1080,12 +1039,205 @@ var change_no_question_for_quiz = async (req, res, next) => {
     )
 }
 
+let chnageBanner = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let file_access = req.file;
+    let { id } = req.body
+
+    if (!req.file) {
+        throw new CreateError("FileUploadError", "upload the banner for the quiz")
+    }
+
+    var blobName = "img/" + Date.now() + '-' + file_access.originalname;
+
+    const sen2 = JSON.stringify({ blobName, file_access })
+    var channel = await connectToRabbitMQ()
+
+    channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
+    console.log("send to queue");
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { banner: blobName })
+    res.send({ status: 1, message: "successfuly updated" })
+
+}
+
+let changeRules = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        rules: Joi.array().required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, rules } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { rules: rules })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+let updateReward = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        reward: Joi.number().max(500).required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, reward } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { reward })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+let changeTimePerQues = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        time_per_question: Joi.number().required()
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, time_per_question } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { time_per_question })
+    return res.send({ status: 1, message: "successfuly updated" })
+
+}
+
+let updateStatus = async (req, res, next) => {
+
+    const schema = Joi.object({
+        id: Joi.string().required(),
+        repeat: Joi.string().valid(
+            'never',
+            '5 mins',
+            '15 mins',
+            '30 mins',
+            '45 mins',
+            '1 hrs',
+            '2 hrs',
+            '3 hrs',
+            '6 hrs',
+            '1 days',
+            '2 days',
+            '3 days',
+            '1 week',
+            '2 week',
+            '1 month',
+            '2 month',
+            '3 month',
+            '6 month',
+            '1 year'
+        ).required(),
+    });
+
+    const { error } = await schema.validateAsync(req.body);
+
+    let { id, repeat } = req.body;
+
+    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { repeat })
+    return res.send({ status: 1, message: "successfuly updated" })
+}
+
+var view_history_of_trivia_quiz = async (req, res) => {
+    const schema = Joi.object({
+        quiz_id: Joi.string().required(),
+        fromDate: Joi.string().allow(''),
+        toDate: Joi.string().allow(''),
+
+
+    });
 
 
 
+
+    var { fromDate, toDate } = req.body;
+
+
+    fromDate = fromDate + ' 00:01:00';
+    toDate = toDate + ' 23:59:59';
+
+    fromDate = moment(fromDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+    toDate = moment(toDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+
+
+
+    const { error } = await schema.validateAsync(req.body);
+
+    const { quiz_id } = req.body;
+
+
+
+    let data2 = await SubTriviaQuiz.aggregate([
+        {
+            $match: {
+                Trivia_Quiz_Id: new mongoose.Types.ObjectId(quiz_id),
+                sch_time: { $gte: fromDate, $lte: toDate }
+            }
+        },
+        {
+            $lookup: {
+                from: "Result_Subtrivias",
+                let: { subtrivia_id: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$subtrivia_id", "$$subtrivia_id"] },
+                                    { $eq: ["$is_attempted", 1] }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                as: "result_subtrivias"
+            }
+        },
+        {
+            $addFields: {
+                total_attempted: { $size: "$result_subtrivias" },
+                total_reward: { $sum: "$result_subtrivias.reward" }
+            }
+        },
+        {
+            $project: {
+                result_subtrivias: 0 // Exclude the result_subtrivias array from the output
+            }
+        }
+    ]);
+
+
+    res.send({ status: 1, data2 })
+
+
+
+
+
+
+}
+
+
+
+
+
+updateStatus = trycatch(updateStatus)
+changeRules = trycatch(changeRules)
+updateReward = trycatch(updateReward)
+changeTimePerQues = trycatch(changeTimePerQues)
 
 createTriviaQuizz = trycatch(createTriviaQuizz);
 getQuizz = trycatch(getQuizz)
 viewDetails = trycatch(viewDetails)
+chnageBanner = trycatch(chnageBanner)
 
-module.exports = { createTriviaQuizz, getQuizz, viewDetails }
+module.exports = { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus }

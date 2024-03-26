@@ -310,17 +310,17 @@ var insert_single_question = async (req, res, next) => {
 
     const updated_time = moment().valueOf();
 
-    const question = new Question({ question, sub_id, is_ques_img: 0, is_opt_img, option1: req.body.option1, option2: req.body.option2, option3: req.body.option3, option4: req.body.option4, question_url: "", ans, update_time: updated_time });
+        const newquestion = new Question({question,sub_id,is_ques_img:0,is_opt_img,option1:req.body.option1,option2:req.body.option2,option3:req.body.option3,option4:req.body.option4,question_url:"",ans,update_time:updated_time});
 
-    await question.save();
-
-
-
-
-
-    return res.send({ status: 1, msg: "insert succesfully" })
-  }
-
+        await newquestion.save();
+      
+        
+        
+  
+      
+        return res.send({status:1,msg:"insert succesfully"})
+      }
+      
 }
 
 
