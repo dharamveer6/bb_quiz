@@ -10,6 +10,7 @@ const { moment } = require("../utils/timezone.js");
 const participantModel = require("../models/participantModel.js");
 const ActiveQuiz = require("../models/activequizmodel.js");
 const SubActiveQuiz = require("../models/subActiveModel.js");
+const { increaseTime } = require("../utils/increase_time.js");
 
 let createActiveQuiz = async (req, res, next) => {
     req.body.question_composition = JSON.parse(req.body.question_composition);
@@ -92,7 +93,7 @@ let createActiveQuiz = async (req, res, next) => {
       quiz_name,
       sch_time,
       repeat,
-      slots,entry_fees
+      slots,entryFees
     } = req.body;
   
     question_composition = JSON.parse(question_composition);
@@ -232,6 +233,8 @@ let createActiveQuiz = async (req, res, next) => {
     console.log("send to queue");
   
     // return console.log(req.body);
+
+    var sch_time2=increaseTime(sch_time,repeat)
   
     let add = await ActiveQuiz({
       category_id,
@@ -245,12 +248,17 @@ let createActiveQuiz = async (req, res, next) => {
       rules,
       banner: blobName,
       quiz_name,
-      sch_time,
+      sch_time:sch_time2,
       repeat,slots,entryFees
     });
     await add.save();
   
     const Active_Quiz_Id  = add.id || add._id;
+
+
+var seconds_to_add=time_per_ques*time_per_ques
+
+  var end_time= moment(sch_time).add(seconds_to_add, 'seconds').valueOf();
   
     let add2 = await SubActiveQuiz({
       category_id,
@@ -264,7 +272,7 @@ let createActiveQuiz = async (req, res, next) => {
       rules,
       banner: blobName,
       quiz_name,
-      sch_time,
+      sch_time,end_time,
       repeat,
       Active_Quiz_Id,
     });
@@ -511,98 +519,54 @@ var view_history_of_active_quiz = async (req, res) => {
   
     var { fromDate, toDate } = req.body;
   
-    var current_date = moment().format("DD-MM-YYYY");
+   
   
     fromDate = fromDate + " 00:01:00";
-    current_date = current_date + " 00:01:00";
+   
     toDate = toDate + " 23:59:59";
   
     fromDate = moment(fromDate, "DD-MM-YYYY HH:mm:ss").valueOf();
     toDate = moment(toDate, "DD-MM-YYYY HH:mm:ss").valueOf();
-    current_date = moment(current_date, "DD-MM-YYYY HH:mm:ss").valueOf();
   
-    if (toDate > current_date) {
-      throw new CreateError("CustomError", `To Date smaller then today date`);
-    }
+
+
+    var curenttimestamp=moment().format("DD-MM-YYYY HH:mm:ss");
+    curenttimestamp=moment(curenttimestamp, "DD-MM-YYYY HH:mm:ss").valueOf();
+
   
     const { error } = await schema.validateAsync(req.body);
   
     const { quiz_id } = req.body;
   
-    const check = await SubTriviaQuiz.aggregate([
-      {
-        $match: {
-          Trivia_Quiz_Id: new mongoose.Types.ObjectId(quiz_id),
-          // sch_time: { $gte: fromDate, $lte: toDate }
-        },
-      },
-      {
-        $lookup: {
-          from: "Result_Subtrivias",
-          let: { subtrivia_ids: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$subtrivia_id", "$$subtrivia_ids"] },
-                    { $eq: ["$is_attempted", 1] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "result_subtrivias",
-        },
-      },
-    ]);
+  
   
     // console.log(check)
   
-    let data2 = await SubTriviaQuiz.aggregate([
+    let data2 = await SubActiveQuiz.aggregate([
       {
         $match: {
-          Trivia_Quiz_Id: new mongoose.Types.ObjectId(quiz_id),
+          Active_Quiz_Id: new mongoose.Types.ObjectId(quiz_id),
           sch_time: { $gte: fromDate, $lte: toDate },
+          end_time: {  $lte: curenttimestamp  },
         },
       },
-      {
-        $lookup: {
-          from: "result_subtrivias",
-          let: { subtrivia_id: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$subtrivia_id", "$$subtrivia_id"] },
-                    { $eq: ["$is_attempted", 1] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "result_subtrivias",
-        },
-      },
-      {
-        $addFields: {
-          total_attempted: { $size: "$result_subtrivias" },
-          total_reward: { $sum: "$result_subtrivias.reward" },
-        },
-      },
-      {
-        $project: {
-          total_reward: 1,
-          total_attempted: 1,
-          total_num_of_quest: 1,
-          min_reward_per: 1,
-          reward: 1,
-          sch_time: 1,
-          // Exclude the result_subtrivias array from the output
-        },
-      },
+    
     ]);
+
+
+    for(let i of data2){
+
+        const slot_aloted=i.slot_aloted;
+        const entryFees=i.entryFees;
+
+        i.collected=slot_aloted*entryFees;
+        i.distributed=Math.ceil(i.collected*0.80);
+        i.income=i.collected-i.distributed
+
+
+    }
+
+
   
     res.send({ status: 1, data2 });
   };

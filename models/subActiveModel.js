@@ -39,6 +39,9 @@ const SubActiveQuizSchema = new Schema(
         end_time: {
             type: Number
         },
+        slot_aloted: {
+            type: Number,default:0
+        },
         rules:{
             type:Array
         },

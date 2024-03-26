@@ -14,6 +14,7 @@ const { moment } = require("../utils/timezone.js");
 const TriviaQuiz = require("../models/triviaModel.js");
 const participantModel = require("../models/participantModel.js");
 const Result_Subtrivia = require("../models/result_subtrivia.js");
+const { increaseTime } = require("../utils/increase_time.js");
 
 let createTriviaQuizz = async (req, res, next) => {
   req.body.question_composition = JSON.parse(req.body.question_composition);
@@ -232,6 +233,8 @@ let createTriviaQuizz = async (req, res, next) => {
   channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
   console.log("send to queue");
 
+  var sch_time2=increaseTime(sch_time,repeat)
+
   // return console.log(req.body);
 
   let add = await TriviaQuiz({
@@ -246,7 +249,7 @@ let createTriviaQuizz = async (req, res, next) => {
     rules,
     banner: blobName,
     quiz_name,
-    sch_time,
+    sch_time:sch_time2,
     repeat,
   });
   await add.save();
