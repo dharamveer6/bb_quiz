@@ -12,8 +12,7 @@ const { azurestreamroute } = require('./routes/azurestreamroutes');
 const { formfillroutes } = require('./routes/formfillroutes');
 const { triviaRoute } = require('./routes/triviaQuizzRoutes');
 const { quizRoute } = require('./routes/quizRoutes');
-const { studymaterialRoute } = require('./routes/studymaterialroutes');
-const { dailyupdateRoute } = require('./routes/dailyupdateroutes');
+
 const { triviastudentrouter } = require('./routes/studenttriviarouter');
 
 const app = express();
