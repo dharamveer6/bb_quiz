@@ -43,8 +43,6 @@ app.use('/stream', azurestreamroute)
 app.use('/trivia', triviaRoute)
 app.use('/student/trivia',triviastudentrouter)
 app.use('/active/quiz', quizRoute)  
-app.use('/study', studymaterialRoute)  
-app.use('/updates', dailyupdateRoute)  
 
 
 

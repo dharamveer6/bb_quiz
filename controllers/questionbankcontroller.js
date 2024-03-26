@@ -67,6 +67,7 @@ var add_subject = async (req, res, next) => {
 
 
 var view_subjects = async (req, res, next) => {
+
   // res.send("d")
   const schema = Joi.object({
     page: Joi.number().integer().allow(0).required(),
@@ -90,7 +91,7 @@ var view_subjects = async (req, res, next) => {
 
   // Count total categories for pagination
   const totalsubjects = await Subject.countDocuments(searchFilter);
-  console.log("searchResults",totalsubjects)
+  console.log("searchResults", totalsubjects)
   // Calculate total pages
   const totalPages = Math.ceil(totalsubjects / limit);
   console.log("total_page", totalPages)
@@ -310,9 +311,9 @@ var insert_single_question = async (req, res, next) => {
 
     const updated_time = moment().valueOf();
 
-    const question = new Question({ question, sub_id, is_ques_img: 0, is_opt_img, option1: req.body.option1, option2: req.body.option2, option3: req.body.option3, option4: req.body.option4, question_url: "", ans, update_time: updated_time });
+    const newquestion = new Question({ question, sub_id, is_ques_img: 0, is_opt_img, option1: req.body.option1, option2: req.body.option2, option3: req.body.option3, option4: req.body.option4, question_url: "", ans, update_time: updated_time });
 
-    await question.save();
+    await newquestion.save();
 
 
 
@@ -763,11 +764,11 @@ var get_questions_in_subject = async (req, res, next) => {
   const { sub_id } = req.body;
 
   const questions = await Question.find({ sub_id: new mongoose.Types.ObjectId(sub_id) });
-  if(questions.length == 0){
-    res.send({status : 1 ,  message : "No question available for this subject"})
+  if (questions.length == 0) {
+    res.send({ status: 1, message: "No question available for this subject" })
   }
-  else{
-    res.send({ status: 1, questions })
+  else {
+    res.send({ status: 1, total_questions: questions.length, questions })
   }
 }
 
@@ -777,7 +778,7 @@ var del_question = async (req, res, next) => {
 
   });
   const { error } = await schema.validateAsync(req.body);
-  
+
   const { que_id } = req.body
   console.log(que_id)
 
