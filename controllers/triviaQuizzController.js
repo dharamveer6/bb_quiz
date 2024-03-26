@@ -2,16 +2,15 @@ const Joi = require("joi");
 const { trycatch } = require("../utils/tryCatch");
 
 const {
-  connectToRabbibannertMQ,
-  connectToRabbitMQ,
+
+  connectToRabbitMQ
 } = require("../rabbit_config");
 const Question = require("../models/questionmodel");
-const { mongoose, Mongoose } = require("mongoose");
+const { mongoose } = require("mongoose");
 const Subject = require("../models/subjectmodel");
 const SubTriviaQuiz = require("../models/subtriviamodel");
 const { CreateError } = require("../utils/create_err");
 const { moment } = require("../utils/timezone.js");
-const triviaModel = require("../models/triviaModel.js");
 const TriviaQuiz = require("../models/triviaModel.js");
 const participantModel = require("../models/participantModel.js");
 const Result_Subtrivia = require("../models/result_subtrivia.js");
@@ -28,7 +27,7 @@ let createTriviaQuizz = async (req, res, next) => {
     quiz_name: Joi.string().required(),
     quiz_name: Joi.string().required(),
     sub_cat_id: Joi.string().required(),
-    subjects_id: Joi.array().items(Joi.string()).min().required(),
+    subjects_id: Joi.array().items(Joi.string()).min(1).required(),
     repeat: Joi.string()
       .valid(
         "never",
@@ -235,7 +234,7 @@ let createTriviaQuizz = async (req, res, next) => {
 
   // return console.log(req.body);
 
-  let add = await triviaModel({
+  let add = await TriviaQuiz({
     category_id,
     sub_cat_id,
     subjects_id,
@@ -412,7 +411,7 @@ let getQuizz = async (req, res, next) => {
         reward: 1,
         banner: 1,
         sch_time: 1,
-        Trivia_Quiz_Id: 1,
+        _id: 1,
       },
     },
     {
