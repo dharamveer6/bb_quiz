@@ -274,6 +274,11 @@ let createTriviaQuizz = async (req, res, next) => {
   if (repeat == "never") {
     return res.send({ status: 1, message: "Quiz Create successfully" });
   } else {
+
+    
+
+
+
     const sen2 = JSON.stringify({ Trivia_Quiz_Id });
 
     channel.sendToQueue("Create_trivia_quiz", Buffer.from(sen2));
