@@ -68,8 +68,26 @@ var add_subject = async (req, res, next) => {
 
 
 var get_all_subjects = async(req,res,next)=>{
+  const schema = Joi.object({
+    search: Joi.string().max(50).allow('').required(),
+    
+
+  });
+
+
+  const { error } = await schema.validateAsync(req.query);
+
+  const { search } = req.query
+
+  // Define the search filter
+  const searchFilter = {
+    sub_name: { $regex: new RegExp(search, "i") } // Case-insensitive search
+};
+
+
+
 // Fetch all subjects from the subjects collection
-const subjects = await Subject.find({});
+const subjects = await Subject.find(searchFilter);
         
 res.json({ status: 1, subjects: subjects });
 
