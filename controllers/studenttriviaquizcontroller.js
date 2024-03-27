@@ -90,7 +90,7 @@ var join_quiz_by_student = async (req, res, next) => {
           is_del: 0
         }
       },
-      // Stage 2: Sample `single_tag_quest` documents from the matched documents
+      // Stage 2: Sample single_tag_quest documents from the matched documents
       {
         $sample: {
           size: single_tag_quest
@@ -119,7 +119,7 @@ var join_quiz_by_student = async (req, res, next) => {
             is_del: 1
           }
         },
-        // Stage 2: Sample `single_tag_quest` documents from the matched documents
+        // Stage 2: Sample single_tag_quest documents from the matched documents
         {
           $sample: {
             size: val2
@@ -147,9 +147,13 @@ var join_quiz_by_student = async (req, res, next) => {
     }
 
 
+    if (question.length !== ans.length) {
+      throw new CreateError("CustomError", "question array and answer array is not same")
+    }
   }
 
 
+  const start_time = moment().valueOf()
 
   console.log(data.total_num_of_quest)
   console.log(data.time_per_question)
@@ -158,105 +162,33 @@ var join_quiz_by_student = async (req, res, next) => {
   const end_time = moment(start_time).add(secondsToAdd, 'seconds').valueOf();
 
 
+  const result = await Result_Subtrivia.findOneAndUpdate(
+    { participant_id: participant_id, subtrivia_id: subtrivia_id },
+    { $set: { stu_ans, is_attempted: 1, end_time: end_time, start_time: start_time, cor_ans: ans, questions: question, participant_id: participant_id, subtrivia_id: subtrivia_id, stu_ans, submit_time_period: secondsToAdd } },
+    { upsert: true, new: true }
+  );
+
+  // If you need to perform additional processing after updating or inserting the document
+  // (e.g., checking whether the condition was met), you can do so here
+
+  // Save the document
+  await result.save();
 
 
 
 
-  var que = await Question.aggregate([
-    // Stage 1: Match documents where is_del is 0
-    {
-      $match: {
-        is_del: 0
-      }
-    },
-    // Stage 2: Sample `single_tag_quest` documents from the matched documents
-    {
-      $sample: {
-        size: single_tag_quest
-      }
-    },
-    // Stage 3: Project specific fields
-    {
-      $project: {
-        // Include or exclude as needed
-        sub_id: 0, // Include or exclude as needed
-        is_del: 0,// Include or exclude as needed
-        ans: 0,// Include or exclude as needed
-      }
-    }
-  ]);
-
-  const val2 = single_tag_quest - que.length;
-
-  if (val2 > 0) {
-    const que2 = await Question.aggregate([
-      // Stage 1: Match documents where is_del is 0
-      {
-        $match: {
-          is_del: 1
-        }
-      },
-      // Stage 2: Sample `single_tag_quest` documents from the matched documents
-      {
-        $sample: {
-          size: val2
-        }
-      },
-      // Stage 3: Project specific fields
-      {
-        $project: {
-          // Include or exclude as needed
-          sub_id: 0, // Include or exclude as needed
-          is_del: 0,// Include or exclude as needed
-          ans: 0,// Include or exclude as needed
-        }
-      }
-    ]);
-
-    que = [...que, ...que2]
-  }
+  res.send({ status: 1, que, timeperiod: secondsToAdd, stu_ans })
 
 
-  for (let i of que) {
-    question = [...question, i._id];
-    ans = [...ans, i.ans];
-  }
 
 
-  if (question.length !== ans.length) {
-    throw new CreateError("CustomError", "question array and answer array is not same")
-  }
+
+
+
+
+
+
 }
-
-
-const start_time = moment().valueOf()
-
-
-const secondsToAdd = (data.total_num_of_quest * data.time_per_question) + 30; // Change this to the number of seconds you want to add
-const end_time = moment(start_time).add(secondsToAdd, 'seconds').valueOf();
-
-
-const result = await Result_Subtrivia.findOneAndUpdate(
-  { participant_id: participant_id, subtrivia_id: subtrivia_id },
-  { $set: { stu_ans, is_attempted: 1, end_time: end_time, start_time: start_time, cor_ans: ans, questions: question, participant_id: participant_id, subtrivia_id: subtrivia_id, stu_ans, submit_time_period: secondsToAdd } },
-  { upsert: true, new: true }
-);
-
-// If you need to perform additional processing after updating or inserting the document
-// (e.g., checking whether the condition was met), you can do so here
-
-// Save the document
-await result.save();
-
-
-
-
-res.send({ status: 1, que, timeperiod: secondsToAdd, stu_ans })
-
-
-
-
-
 
 
 var submmit_triviaquiz = async (req, res, next) => {
@@ -365,3 +297,8 @@ var submmit_triviaquiz = async (req, res, next) => {
   }
 
 }
+
+join_quiz_by_student = trycatch(join_quiz_by_student);
+submmit_triviaquiz = trycatch(submmit_triviaquiz);
+
+module.exports = { join_quiz_by_student, submmit_triviaquiz } 

@@ -12,6 +12,7 @@ async function connectToRabbitMQ() {
    
      await channel.assertQueue("forgetpassemail", { durable: true });
      await channel.assertQueue("Create_trivia_quiz", { durable: true });
+    await channel.assertQueue("declare_result_active_quiz", { durable: true });
     //  await channel.assertQueue("store_data_on_azure", { durable: false });
     //  await channel.assertQueue("store_prerec__question_excel", { durable: false });
 
