@@ -66,6 +66,17 @@ var add_subject = async (req, res, next) => {
 }
 
 
+
+var get_all_subjects = async(req,res,next)=>{
+// Fetch all unique subject names from the subjects collection
+const subjects = await Subject.distinct('sub_name');
+        
+res.json({ status: 1, subjects: subjects });
+
+
+
+}
+
 var view_subjects = async (req, res, next) => {
 
   // res.send("d")
@@ -808,5 +819,7 @@ add_bulk_question = trycatch(add_bulk_question)
 del_question = trycatch(del_question)
 get_questions_in_subject = trycatch(get_questions_in_subject)
 
+get_all_subjects = trycatch(get_all_subjects)
 
-module.exports = { del_question, get_questions_in_subject, add_subject, view_subjects, insert_single_question, add_bulk_question, update_category_of_subject, view_edit_page_for_subject, delete_new_subcategory, insert_new_subcategory }
+
+module.exports = { del_question, get_questions_in_subject, add_subject, view_subjects, insert_single_question, add_bulk_question, update_category_of_subject, view_edit_page_for_subject, delete_new_subcategory, insert_new_subcategory ,get_all_subjects}

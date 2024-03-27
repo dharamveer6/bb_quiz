@@ -1,5 +1,5 @@
 const express = require('express');
-const { add_subject, view_subjects, insert_single_question, add_bulk_question, view_edit_page_for_subject, update_category_of_subject, insert_new_subcategory, delete_new_subcategory, del_question, get_questions_in_subject } = require('../controllers/questionbankcontroller');
+const { add_subject, view_subjects, insert_single_question, add_bulk_question, view_edit_page_for_subject, update_category_of_subject, insert_new_subcategory, delete_new_subcategory, del_question, get_questions_in_subject, get_all_subjects } = require('../controllers/questionbankcontroller');
 const { uploadimage } = require('../utils/imgmulter');
 const { uploadexcel } = require('../utils/exlmulter');
 const userAuthMiddleware = require('../middleware/user_tokenval');
@@ -23,6 +23,7 @@ questionbankRoute.route('/delete/question/for/subject').post(userAuthMiddleware,
 questionbankRoute.route('/get/question/for/subject').post(userAuthMiddleware, get_questions_in_subject);
 
 // 
+questionbankRoute.route('/get/all/subjects').post(get_all_subjects);
 
 
 
