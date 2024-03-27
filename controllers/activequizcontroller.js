@@ -277,6 +277,10 @@ var seconds_to_add=time_per_ques*time_per_ques
       Active_Quiz_Id,
     });
     await add2.save();
+
+    const SubActive_Quiz_Id  = add2.id || add2._id;
+    const sen3 = JSON.stringify({ SubActive_Quiz_Id });
+    channel.sendToQueue("declare_active_result", Buffer.from(sen3));
   
     if (repeat == "never") {
       return res.send({ status: 1, message: "Quiz Create successfully" });
