@@ -23,7 +23,7 @@ questionbankRoute.route('/delete/question/for/subject').post(userAuthMiddleware,
 questionbankRoute.route('/get/question/for/subject').post(userAuthMiddleware, get_questions_in_subject);
 
 // 
-questionbankRoute.route('/get/all/subjects').post(get_all_subjects);
+questionbankRoute.route('/get/all/subjects').post(userAuthMiddleware,get_all_subjects);
 
 
 
