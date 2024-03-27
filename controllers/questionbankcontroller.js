@@ -68,8 +68,8 @@ var add_subject = async (req, res, next) => {
 
 
 var get_all_subjects = async(req,res,next)=>{
-// Fetch all unique subject names from the subjects collection
-const subjects = await Subject.distinct('sub_name');
+// Fetch all subjects from the subjects collection
+const subjects = await Subject.find({});
         
 res.json({ status: 1, subjects: subjects });
 
