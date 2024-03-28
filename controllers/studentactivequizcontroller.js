@@ -3,6 +3,7 @@ const SubActiveQuiz = require("../models/subActiveModel");
 const participantModel = require("../models/participantModel");
 const Result_Active_quiz = require("../models/result_subactivemodel");
 const { increaseTime } = require("../utils/increase_time");
+const { trycatch } = require("../utils/tryCatch");
 
 
 var registor_to_active_quiz=async(req,res,next)=>{
@@ -354,3 +355,8 @@ var submmit_activequiz=async(req,res,next)=>{
 }
 
 
+registor_to_active_quiz  = trycatch(registor_to_active_quiz);
+join_Activequiz_by_student = trycatch(join_Activequiz_by_student);
+submmit_activequiz = trycatch(submmit_activequiz)
+
+module.exports = {registor_to_active_quiz , submmit_activequiz , join_Activequiz_by_student}
