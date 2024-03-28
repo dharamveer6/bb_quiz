@@ -1278,6 +1278,10 @@ view_history_of_trivia_quiz = trycatch(view_history_of_trivia_quiz);
 view_winner_and_participants_of_subtrivia = trycatch(
     view_winner_and_participants_of_subtrivia
 );
+change_no_question_for_quiz=trycatch(change_no_question_for_quiz)
+change_subject_for_quiz=trycatch(change_subject_for_quiz)
+change_subcategory_of_quiz=trycatch(change_subcategory_of_quiz)
+change_category_of_quiz=trycatch(change_category_of_quiz)
 
 module.exports = {
     view_winner_and_participants_of_subtrivia,
@@ -1290,4 +1294,9 @@ module.exports = {
     updateReward,
     changeTimePerQues,
     updateStatus,
+    change_no_question_for_quiz,
+    change_subject_for_quiz,
+    change_subcategory_of_quiz,
+    change_category_of_quiz
+
 };
