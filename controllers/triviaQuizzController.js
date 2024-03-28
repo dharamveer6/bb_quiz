@@ -165,7 +165,7 @@ let createTriviaQuizz = async (req, res, next) => {
   } else {
     throw new CreateError(
       "CustomError",
-      total persent is ${check_pers} make sure you persent will 100
+      `total persent is ${check_pers} make sure you persent will 100`
     );
   }
 
@@ -204,7 +204,7 @@ let createTriviaQuizz = async (req, res, next) => {
     if (que_len < single_tag_quest) {
       throw new CreateError(
         "CustomError",
-        ${topic_name} has tag has not sufficient question
+        `${topic_name} has tag has not sufficient question`
       );
     }
 
