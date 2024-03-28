@@ -1177,7 +1177,7 @@ let updateStatus = async (req, res, next) => {
   return res.send({ status: 1, message: "successfuly updated" });
 };
 
-var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
+var view_winner_and_participants_of_Active_quiz = async (req, res, next) => {
   const schema = Joi.object({
     subactive_quiz_id: Joi.string().required(),
   });
@@ -1190,7 +1190,7 @@ var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
   var rewardedParticipants = await Result_Active_quiz.aggregate([
     {
       $match: {
-        subtrivia_id: new mongoose.Types.ObjectId(subactive_quiz_id),
+        SubActive_id: new mongoose.Types.ObjectId(subactive_quiz_id),
         reward: { $ne: 0 }
       },
     },
@@ -1205,7 +1205,7 @@ var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
   var nonRewardedParticipants = await Result_Active_quiz.aggregate([
     {
       $match: {
-        subtrivia_id: new mongoose.Types.ObjectId(subactive_quiz_id),
+        SubActive_id: new mongoose.Types.ObjectId(subactive_quiz_id),
         reward: 0
       },
     },
@@ -1253,6 +1253,7 @@ chnageBanner = trycatch(chnageBanner)
 updateEntryFees = trycatch(updateEntryFees)
 changeTimePerQues = trycatch(changeTimePerQues)
 updateStatus = trycatch(updateStatus)
+view_winner_and_participants_of_Active_quiz = trycatch(view_winner_and_participants_of_Active_quiz)
 
 module.exports = {
   getActiveQuiz,
@@ -1267,5 +1268,6 @@ module.exports = {
   changeRules,
   updateStatus,
   changeTimePerQues,
-  updateEntryFees
+  updateEntryFees,
+  view_winner_and_participants_of_Active_quiz,
 }

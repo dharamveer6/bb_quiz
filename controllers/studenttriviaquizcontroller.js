@@ -192,7 +192,6 @@ var join_quiz_by_student = async (req, res, next) => {
 
 
 var submmit_triviaquiz = async (req, res, next) => {
-
   const schema = Joi.object({
     subtrivia_id: Joi.string().required(),
     participant_id: Joi.string().required(),

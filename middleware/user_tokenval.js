@@ -18,7 +18,6 @@ let userAuthMiddleware = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-
     // Check if admin exists in the database
     const user = await userModel.findOne({ _id: decoded._id, email: decoded.email, token });
     if (user.token !== token) {

@@ -1,38 +1,42 @@
-const mongoose = require("mongoose");
+    const mongoose = require("mongoose");
 
 
-const schema = new mongoose.Schema({
-    name: { type: String },
+    const schema = new mongoose.Schema({
+        name: { type: String },
 
-    phone: {
-        type: Number,
-    },
-    email: {
-        type: String,
-    },
+        phone: {
+            type: Number,
+        },
+        email: {
+            type: String,
+        },
 
-    Password: {
-        type: String
-    },
-    otp:{
+        Password: {
+            type: String
+        },
+        otp:{
+            type:String
+        },
+        token: {
+            type: String
+        },
+        refer_id:{
+            type:String
+        },
+        refer_by:{
+            type:String
+        },
+        wallet: {
+            type: Number,
+            default : 0 
+        },
+        fcm_key:{
         type:String
-    },
-    token: {
-        type: String
-    },
-    refer_id:{
+        },
+        socket_key:{
         type:String
-    },
-    refer_by:{
-        type:String
-    },
-    fcm_key:{
-      type:String
-    },
-    socket_key:{
-      type:String
-    }
-});
+        }
+    });
 
-const participantModel = mongoose.model("Participants", schema);
-module.exports = participantModel
+    const participantModel = mongoose.model("Participants", schema);
+    module.exports = participantModel

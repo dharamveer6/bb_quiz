@@ -289,7 +289,7 @@ let createTriviaQuizz = async (req, res, next) => {
     return res.send({ status: 1, message: "Quiz Create successfully" });
   }
 };
-
+  
 let getQuizz = async (req, res, next) => {
   const schema = Joi.object({
     searchQuery: Joi.string().allow(""),
