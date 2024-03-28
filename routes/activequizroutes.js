@@ -4,7 +4,7 @@ const { createActiveQuiz, getActiveQuiz, view_history_of_active_quiz, viewDetail
 const activeRoute = express.Router();
 
 activeRoute.route('/create/quiz').post(uploadimage.single('banner'), createActiveQuiz);
-activeRoute.route('/get/quizz').get(getActiveQuiz);
+activeRoute.route('/get/quiz').get(getActiveQuiz);
 activeRoute.route('/view/details').get(viewDetailsofActivequiz);
 activeRoute.route('/view/history/of/activequiz').post(view_history_of_active_quiz);
 
