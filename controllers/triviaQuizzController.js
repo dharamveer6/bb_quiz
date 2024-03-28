@@ -915,7 +915,7 @@ var change_no_question_for_quiz = async (req, res, next) => {
   } else {
     throw new CreateError(
       "CustomError",
-      `total persent is ${check_pers} make sure you persent will 100`
+      "total persent is ${check_pers} make sure you persent will 100"
     );
   }
 
@@ -1117,7 +1117,7 @@ var view_history_of_trivia_quiz = async (req, res) => {
   current_date = moment(current_date, "DD-MM-YYYY HH:mm:ss").valueOf();
 
   if (toDate > current_date) {
-    throw new CreateError("CustomError", `To Date smaller then today date`);
+    throw new CreateError("CustomError", "To Date smaller then today date");
   }
 
   const { error } = await schema.validateAsync(req.body);

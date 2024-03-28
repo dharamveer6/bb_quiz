@@ -44,4 +44,4 @@ function increaseTime(sch_time, interval) {
 
 module.exports={increaseTime}
 
-// Example usage:
+// Example usage
