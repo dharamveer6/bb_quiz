@@ -11,7 +11,7 @@ const SubActiveQuizSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'subcategories'
         },
-        subject_id: {
+        subjects_id: {
             type: Array,
             items: {
                 type: Schema.Types.ObjectId,
