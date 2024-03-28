@@ -1,5 +1,5 @@
 const express=require('express');
-const { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus } = require('../controllers/triviaQuizzController');
+const { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus, change_category_of_quiz, change_subcategory_of_quiz, change_subject_for_quiz, change_no_question_for_quiz } = require('../controllers/triviaQuizzController');
 const { uploadimage } = require('../utils/imgmulter');
 const triviaRoute=express.Router();
 
@@ -11,5 +11,10 @@ triviaRoute.route('/change/rules').post(changeRules);
 triviaRoute.route('/update/reward').post(updateReward);
 triviaRoute.route('/changes/time/perquestion').post(changeTimePerQues);
 triviaRoute.route('/changes/repeat').post(updateStatus);
+
+triviaRoute.route('/changes/category').post(change_category_of_quiz);
+triviaRoute.route('/changes/subcategory').post(change_subcategory_of_quiz);
+triviaRoute.route('/changes/subject').post(change_subject_for_quiz);
+triviaRoute.route('/changes/numberof/quiz').post(change_no_question_for_quiz);
 
 module.exports={triviaRoute}

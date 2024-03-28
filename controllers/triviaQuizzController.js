@@ -10,12 +10,11 @@ const { CreateError } = require('../utils/create_err');
 const { moment } = require("../utils/timezone.js")
 const triviaModel = require("../models/triviaModel.js");
 const TriviaQuiz = require('../models/triviaModel.js');
+const { increaseTime } = require('../utils/increase_time.js');
 
 
 
 let createTriviaQuizz = async (req, res, next) => {
-
-
 
 
     req.body.question_composition = JSON.parse(req.body.question_composition)
@@ -24,7 +23,7 @@ let createTriviaQuizz = async (req, res, next) => {
     req.body.total_num_of_quest = JSON.parse(req.body.total_num_of_quest)
     // return console.log(req.body.total_num_of_quest);
 
-    req.body.time_per_ques = JSON.parse(req.body.time_per_ques)
+    req.body.time_per_question = JSON.parse(req.body.time_per_question)
     req.body.reward = JSON.parse(req.body.reward)
     req.body.min_reward_per = JSON.parse(req.body.min_reward_per)
 
@@ -63,7 +62,7 @@ let createTriviaQuizz = async (req, res, next) => {
             Joi.number().integer().max(100).min(0).required()
         ).max(10).required(),
         total_num_of_quest: Joi.number().required(),
-        time_per_ques: Joi.number().required(),
+        time_per_question: Joi.number().required(),
         reward: Joi.number().max(500).required(),
         min_reward_per: Joi.number().max(100).required(),
 
@@ -90,7 +89,7 @@ let createTriviaQuizz = async (req, res, next) => {
         subjects_id,
         question_composition,
         total_num_of_quest,
-        time_per_ques,
+        time_per_question,
         min_reward_per,
         reward,
         rules,
@@ -216,6 +215,8 @@ let createTriviaQuizz = async (req, res, next) => {
 
 
     // return console.log(req.body);
+    var sch_time2 = increaseTime(sch_time, repeat);
+    //    return console.log(sch_time,sch_time2);
 
     let add = await triviaModel({
         category_id,
@@ -223,11 +224,11 @@ let createTriviaQuizz = async (req, res, next) => {
         subjects_id,
         question_composition,
         total_num_of_quest,
-        time_per_ques,
+        time_per_question,
         min_reward_per,
         reward,
         rules,
-        banner: blobName, quiz_name, sch_time, repeat
+        banner: blobName, quiz_name, sch_time: sch_time2, repeat
     })
     await add.save();
 
@@ -239,7 +240,7 @@ let createTriviaQuizz = async (req, res, next) => {
         subjects_id,
         question_composition,
         total_num_of_quest,
-        time_per_ques,
+        time_per_question,
         min_reward_per,
         reward,
         rules,
@@ -253,8 +254,6 @@ let createTriviaQuizz = async (req, res, next) => {
     }
 
     else {
-
-
         const sen2 = JSON.stringify({ Trivia_Quiz_Id })
 
         channel.sendToQueue("Create_trivia_quiz", Buffer.from(sen2));
@@ -286,8 +285,8 @@ let getQuizz = async (req, res, next) => {
         searchQuery: Joi.string().allow(''),
         page: Joi.number().integer(),
         limit: Joi.number().integer(),
-        fromDate: Joi.string().allow(''),
-        toDate: Joi.string().allow(''),
+        fromDate: Joi.string().regex(/^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/).required(),
+        toDate: Joi.string().regex(/^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/).required(),
     });
     //     const unixTimestamp = 1710572400000;
 
@@ -297,20 +296,24 @@ let getQuizz = async (req, res, next) => {
     //     // Format the date using Moment.js
     //     const formattedDate = moment(datew).format('DD-MM-YYYY HH:mm:ss');
 
-    //    return console.log(formattedDate);
-    await schema.validateAsync(req.query);
+    //    return console.log(1);
+    const { error } = await schema.validateAsync(req.query);
 
 
     var { searchQuery, page, limit, fromDate, toDate } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
 
+
+
     fromDate = fromDate + ' 00:01:00';
     toDate = toDate + ' 23:59:59';
 
+
     fromDate = moment(fromDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
+    // return console.log(fromDate);
+
     toDate = moment(toDate, 'DD-MM-YYYY HH:mm:ss').valueOf();
-    // return console.log(fromDate,toDate);
 
     // return console.log(startDate,endDate);
     let data = await SubTriviaQuiz.aggregate([
@@ -360,7 +363,7 @@ let getQuizz = async (req, res, next) => {
 
 
 
-
+    // return console.log(data);
 
     const trivia_arr = []
 
@@ -1143,12 +1146,32 @@ let updateStatus = async (req, res, next) => {
     const { error } = await schema.validateAsync(req.body);
 
     let { id, repeat } = req.body;
+    const data = await TriviaQuiz.findOne({ _id: new mongoose.Types.ObjectId(id) })
+    if (!data) {
+        throw new CreateError("DataError", "no such data exists")
+    }
+    // return console.log(data);
 
-    const update = await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { repeat })
+    if (data.repeat === "never" && repeat !== "never") {
+        var channel = await connectToRabbitMQ()
+
+        const sen2 = JSON.stringify({ Trivia_Quiz_Id: id })
+
+        channel.sendToQueue("Create_trivia_quiz", Buffer.from(sen2));
+        console.log("send to queue");
+        return res.send({ status: 1, message: "successfuly updated" })
+
+    }
+
+    await TriviaQuiz.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { repeat })
+
+
     return res.send({ status: 1, message: "successfuly updated" })
+
+
 }
 
-var view_history_of_trivia_quiz = async (req, res) => {
+var view_history_of_trivia_quiz = async (req, res, next) => {
     const schema = Joi.object({
         quiz_id: Joi.string().required(),
         fromDate: Joi.string().allow(''),
@@ -1227,7 +1250,10 @@ var view_history_of_trivia_quiz = async (req, res) => {
 }
 
 
-
+change_no_question_for_quiz = trycatch(change_no_question_for_quiz);
+change_subject_for_quiz = trycatch(change_subject_for_quiz);
+change_subcategory_of_quiz = trycatch(change_subcategory_of_quiz);
+change_category_of_quiz = trycatch(change_category_of_quiz);
 
 
 updateStatus = trycatch(updateStatus)
@@ -1240,4 +1266,4 @@ getQuizz = trycatch(getQuizz)
 viewDetails = trycatch(viewDetails)
 chnageBanner = trycatch(chnageBanner)
 
-module.exports = { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus }
+module.exports = { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus, change_no_question_for_quiz, change_subject_for_quiz, change_subcategory_of_quiz, change_category_of_quiz }
