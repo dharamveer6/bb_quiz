@@ -528,7 +528,7 @@ let viewDetailsofActivequiz = async (req, res, next) => {
     {
       $lookup: {
         from: "categories",
-        localField: "categoryId",
+        localField: "category_id",
         foreignField: "_id",
         as: "category",
       },
@@ -562,9 +562,9 @@ let viewDetailsofActivequiz = async (req, res, next) => {
     },
   ]);
 
-  const check = await ActiveQuiz.findById(id)
+//   const check = await ActiveQuiz.findById(id)
   
-console.log(check)
+// console.log(check)
   console.log(data)
   data.sch_time = moment(data.sch_time).format("DD-MM-YYYY HH:mm");
   console.log(data.sch_time);
