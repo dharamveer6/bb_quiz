@@ -233,7 +233,7 @@ let createTriviaQuizz = async (req, res, next) => {
   channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
   console.log("send to queue");
 
-  var sch_time2=increaseTime(sch_time,repeat)
+  var sch_time2 = increaseTime(sch_time, repeat)
 
   // return console.log(req.body);
 
@@ -249,7 +249,7 @@ let createTriviaQuizz = async (req, res, next) => {
     rules,
     banner: blobName,
     quiz_name,
-    sch_time:sch_time2,
+    sch_time: sch_time2,
     repeat,
   });
   await add.save();
@@ -278,7 +278,7 @@ let createTriviaQuizz = async (req, res, next) => {
     return res.send({ status: 1, message: "Quiz Create successfully" });
   } else {
 
-    
+
 
 
 
@@ -1207,7 +1207,7 @@ var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
     subtrivia_quiz_id: Joi.string().required(),
   });
 
-  
+
   const { error } = await schema.validateAsync(req.body);
 
   var { subtrivia_quiz_id } = req.body;
@@ -1215,7 +1215,7 @@ var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
   var rewardedParticipants = await Result_Subtrivia.aggregate([
     {
       $match: {
-        subtrivia_id:new mongoose.Types.ObjectId(subtrivia_quiz_id),
+        subtrivia_id: new mongoose.Types.ObjectId(subtrivia_quiz_id),
         reward: { $ne: 0 }
       },
     },
@@ -1230,7 +1230,7 @@ var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
   var nonRewardedParticipants = await Result_Subtrivia.aggregate([
     {
       $match: {
-        subtrivia_id:new mongoose.Types.ObjectId(subtrivia_quiz_id),
+        subtrivia_id: new mongoose.Types.ObjectId(subtrivia_quiz_id),
         reward: 0
       },
     },
@@ -1262,7 +1262,7 @@ var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
   console.log("Rewarded Participants:", rewardedParticipantNames);
   console.log("Non-Rewarded Participants:", nonRewardedParticipantNames);
 
-  res.send({ status: 1 ,winners:rewardedParticipantNames,participants:nonRewardedParticipantNames});
+  res.send({ status: 1, winners: rewardedParticipantNames, participants: nonRewardedParticipantNames });
 };
 
 updateStatus = trycatch(updateStatus);
@@ -1278,6 +1278,10 @@ view_history_of_trivia_quiz = trycatch(view_history_of_trivia_quiz);
 view_winner_and_participants_of_subtrivia = trycatch(
   view_winner_and_participants_of_subtrivia
 );
+change_no_question_for_quiz = trycatch(change_no_question_for_quiz)
+change_subject_for_quiz = trycatch(change_subject_for_quiz)
+change_subcategory_of_quiz = trycatch(change_subcategory_of_quiz)
+change_category_of_quiz = trycatch(change_category_of_quiz)
 
 module.exports = {
   view_winner_and_participants_of_subtrivia,
@@ -1290,4 +1294,9 @@ module.exports = {
   updateReward,
   changeTimePerQues,
   updateStatus,
+  change_no_question_for_quiz,
+  change_subject_for_quiz,
+  change_subcategory_of_quiz,
+  change_category_of_quiz
+
 };
