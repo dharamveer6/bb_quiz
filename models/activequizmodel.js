@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const activeSchema = new Schema(
     {
-   
+
         categoryId: {
             type: Schema.Types.ObjectId,
             ref: 'categories'
@@ -12,7 +12,7 @@ const activeSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'subcategories'
         },
-        subject_id: {
+        subjects_id: {
             type: Array,
             items: {
                 type: Schema.Types.ObjectId,
@@ -21,7 +21,7 @@ const activeSchema = new Schema(
         },
         slots: { type: Number },
         entryFees: { type: Number },
-        question_composition:{
+        question_composition: {
             type: Map,
             of: Number,
             ref: 'Subject' // Reference to the 'subjects' collection
@@ -33,26 +33,28 @@ const activeSchema = new Schema(
             type: Number
         },
 
-
+        end_time: {
+            type: Number
+        },
         sch_time: {
             type: Number
         },
-        rules:{
-            type:Array
+        rules: {
+            type: Array
         },
         banner:
         {
-            type:String
+            type: String
         },
         quiz_name:
         {
-            type:String
+            type: String
         },
         repeat:
         {
-            type:String
+            type: String
         }
-       
+
     }
 
 )

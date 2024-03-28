@@ -12,7 +12,7 @@ const Result_Subtrivias = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Participants'
     },
-   
+
     questions: {
         type: Array,
         items: {
@@ -20,19 +20,19 @@ const Result_Subtrivias = new Schema({
             ref: 'Question'
         },
     },
-    cor_ans:{ type: Array },
-    stu_ans:{ type: Array },
+    cor_ans: { type: Array },
+    stu_ans: { type: Array },
     start_time: { type: Number },
     end_time: { type: Number },
     submit_time_period: { type: Number },
-    reward: { type: Number,default:0 },
-    obtain_persentage: { type: Number,default:0 },
-    marks: { type: Number,default:0 },
-    is_attempted: { type: Number,default:0 },
-    
-    
+    reward: { type: Number, default: 0 },
+    obtain_persentage: { type: Number, default: 0 },
+    marks: { type: Number, default: 0 },
+    is_attempted: { type: Number, default: 0 },
+
+
 });
 
 const Result_Subtrivia = mongoose.model('Result_Subtrivia', Result_Subtrivias);
 
-module.exports = Result_Subtrivia;
+module.exports = { Result_Subtrivia };

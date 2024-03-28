@@ -11,9 +11,9 @@ const { connectToRabbitMQ } = require('./rabbit_config');
 const { azurestreamroute } = require('./routes/azurestreamroutes');
 const { formfillroutes } = require('./routes/formfillroutes');
 const { triviaRoute } = require('./routes/triviaQuizzRoutes');
-const { quizRoute } = require('./routes/quizRoutes');
-
 const { triviastudentrouter } = require('./routes/studenttriviarouter');
+const { studentactivequizRoutes } = require('./routes/studentactivequizroutes');
+const { activeRoute } = require('./routes/activequizroutes');
 
 const app = express();
 
@@ -40,8 +40,9 @@ app.use('/questionbank', questionbankRoute);
 app.use('/formfill', formfillroutes)
 app.use('/stream', azurestreamroute)
 app.use('/trivia', triviaRoute)
-app.use('/student/trivia',triviastudentrouter)
-app.use('/active/quiz', quizRoute)  
+app.use('/student/trivia', triviastudentrouter)
+app.use('/active/quiz', activeRoute)
+app.use('/student/active', studentactivequizRoutes)
 
 
 
