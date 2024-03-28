@@ -88,7 +88,7 @@ let createActiveQuiz = async (req, res, next) => {
     subjects_id,
     question_composition,
     total_num_of_quest,
-    time_per_ques,
+    time_per_question,
     min_reward_per,
     reward,
     rules,
@@ -247,7 +247,7 @@ let createActiveQuiz = async (req, res, next) => {
     subjects_id,
     question_composition,
     total_num_of_quest,
-    time_per_ques,
+    time_per_question,
     min_reward_per,
     reward,
     rules,
@@ -261,7 +261,7 @@ let createActiveQuiz = async (req, res, next) => {
   const Active_Quiz_Id = add.id || add._id;
 
 
-  var seconds_to_add = time_per_ques * time_per_ques
+  var seconds_to_add = time_per_question * total_num_of_quest
 
   var end_time = moment(sch_time).add(seconds_to_add, 'seconds').valueOf();
 
@@ -271,7 +271,7 @@ let createActiveQuiz = async (req, res, next) => {
     subjects_id,
     question_composition,
     total_num_of_quest,
-    time_per_ques,
+    time_per_question,
     min_reward_per,
     reward,
     rules,
