@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const activeSchema = new Schema(
     {
 
-        categoryId: {
+        category_id: {
             type: Schema.Types.ObjectId,
             ref: 'categories'
         },

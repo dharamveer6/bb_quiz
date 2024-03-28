@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 const SubActiveQuizSchema = new Schema(
     {
    
-        categoryId: {
+        category_id : {
             type: Schema.Types.ObjectId,
             ref: 'categories'
         },

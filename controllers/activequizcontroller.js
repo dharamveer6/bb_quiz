@@ -277,7 +277,7 @@ let createActiveQuiz = async (req, res, next) => {
     banner: blobName,
     quiz_name,
     sch_time, end_time,
-    repeat,
+    repeat,entryFees,
     Active_Quiz_Id,
   });
   await add2.save();
@@ -374,9 +374,9 @@ let getActiveQuiz = async (req, res, next) => {
     // },
   ]);
 
-  console.log(data.length , "leb")
+  // console.log(data.length , "leb")
 
-  // console.log(data)
+  // console.log(data , "dT")
 
   const trivia_arr = [];
 
@@ -384,27 +384,29 @@ let getActiveQuiz = async (req, res, next) => {
     i.sch_time = moment(i.sch_time).format("DD-MM-YYYY HH:mm:ss");
 
     trivia_arr.push(i.Active_Quiz_Id);
+    // console.log(i)
   }
-  console.log(trivia_arr)
+  console.log(trivia_arr.length )
   // const search_ids=new Set(trivia_arr);
 
   totalData = await ActiveQuiz.countDocuments({
     quiz_name: { $regex: searchQuery, $options: "i" },
-    _id: { $in: trivia_arr },
+    _id: trivia_arr,
     // sch_time: { $gte: fromDate, $lte: toDate }
   });
-  console.log(totalData)
+  
+
   let data2 = await ActiveQuiz.aggregate([
-      // {
-      //   $match: {
-      //     quiz_name: { $regex: searchQuery, $options: "i" },
-      //     _id: { $in: trivia_arr },
-      //   },
-      // },
+    {
+      $match: {
+        quiz_name: { $regex: searchQuery, $options: "i" },
+        _id: { $in: trivia_arr } 
+      }
+    },
     {
       $lookup: {
         from: "categories",
-        localField: "categoryId",
+        localField: "category_id",
         foreignField: "_id",
         as: "category",
       },
@@ -415,7 +417,7 @@ let getActiveQuiz = async (req, res, next) => {
     {
       $lookup: {
         from: "subcategories",
-        localField: "subCategoryId",
+        localField: "sub_cat_id",
         foreignField: "_id",
         as: "subcategory",
       },
@@ -429,7 +431,6 @@ let getActiveQuiz = async (req, res, next) => {
         subcategory_name: "$subcategory.sub_category_name",
         quiz_name: 1,
         total_num_of_quest: 1,
-
         entryFees: 1,
         banner: 1,
         sch_time: 1,
@@ -445,8 +446,8 @@ let getActiveQuiz = async (req, res, next) => {
   ]);
 
   const totalPages = Math.ceil(totalData / limit);
-  console.log(totalPages);
-  console.log("data2",data2);
+  // console.log(totalPages);
+  // console.log("data2", data2);
 
 
   for (let i of data2) {
