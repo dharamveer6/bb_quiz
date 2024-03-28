@@ -374,7 +374,7 @@ let getActiveQuiz = async (req, res, next) => {
     // },
   ]);
 
-  console.log(data.length , "leb")
+  console.log(data.length, "leb")
 
   // console.log(data)
 
@@ -395,12 +395,12 @@ let getActiveQuiz = async (req, res, next) => {
   });
   console.log(totalData)
   let data2 = await ActiveQuiz.aggregate([
-      // {
-      //   $match: {
-      //     quiz_name: { $regex: searchQuery, $options: "i" },
-      //     _id: { $in: trivia_arr },
-      //   },
-      // },
+    // {
+    //   $match: {
+    //     quiz_name: { $regex: searchQuery, $options: "i" },
+    //     _id: { $in: trivia_arr },
+    //   },
+    // },
     {
       $lookup: {
         from: "categories",
@@ -446,7 +446,7 @@ let getActiveQuiz = async (req, res, next) => {
 
   const totalPages = Math.ceil(totalData / limit);
   console.log(totalPages);
-  console.log("data2",data2);
+  console.log("data2", data2);
 
 
   for (let i of data2) {
@@ -578,8 +578,8 @@ var view_history_of_active_quiz = async (req, res) => {
     i.collected = slot_aloted * entryFees;
     i.distributed = Math.ceil(i.collected * 0.80);
     i.income = i.collected - i.distributed;
-    i.end_time= moment(i.end_time).format("DD-MM-YYYY HH:mm:ss");
-    i.sch_time= moment(i.sch_time).format("DD-MM-YYYY HH:mm:ss");
+    i.end_time = moment(i.end_time).format("DD-MM-YYYY HH:mm:ss");
+    i.sch_time = moment(i.sch_time).format("DD-MM-YYYY HH:mm:ss");
   }
 
 
