@@ -1,5 +1,5 @@
 const express=require('express');
-const { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus, view_history_of_trivia_quiz, view_winner_and_participants_of_subtrivia } = require('../controllers/triviaQuizzController');
+const { createTriviaQuizz, getQuizz, viewDetails, chnageBanner, changeRules, updateReward, changeTimePerQues, updateStatus, view_history_of_trivia_quiz, view_winner_and_participants_of_subtrivia, change_category_of_quiz, change_subcategory_of_quiz, change_subject_for_quiz, change_no_question_for_quiz } = require('../controllers/triviaQuizzController');
 const { uploadimage } = require('../utils/imgmulter');
 const triviaRoute=express.Router();
 

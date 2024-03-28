@@ -612,6 +612,7 @@ var view_history_of_active_quiz = async (req, res) => {
 
   ]);
 
+  // return console.log(data2);
 
   for (let i of data2) {
 
