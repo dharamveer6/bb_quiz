@@ -12,7 +12,6 @@ const ActiveQuiz = require("../models/activequizmodel.js");
 const SubActiveQuiz = require("../models/subActiveModel.js");
 const { increaseTime } = require("../utils/increase_time.js");
 const Subject = require("../models/subjectmodel.js");
-const Result_Active_quiz = require("../models/result_subactivemodel.js");
 
 let createActiveQuiz = async (req, res, next) => {
   req.body.question_composition = JSON.parse(req.body.question_composition);
@@ -278,7 +277,7 @@ let createActiveQuiz = async (req, res, next) => {
     banner: blobName,
     quiz_name,
     sch_time, end_time,
-    repeat, entryFees,
+    repeat,
     Active_Quiz_Id,
   });
   await add2.save();
@@ -375,9 +374,9 @@ let getActiveQuiz = async (req, res, next) => {
     // },
   ]);
 
-  // console.log(data.length , "leb")
+  console.log(data.length , "leb")
 
-  // console.log(data , "dT")
+  // console.log(data)
 
   const trivia_arr = [];
 
@@ -385,29 +384,27 @@ let getActiveQuiz = async (req, res, next) => {
     i.sch_time = moment(i.sch_time).format("DD-MM-YYYY HH:mm:ss");
 
     trivia_arr.push(i.Active_Quiz_Id);
-    // console.log(i)
   }
-  console.log(trivia_arr.length)
+  console.log(trivia_arr)
   // const search_ids=new Set(trivia_arr);
 
   totalData = await ActiveQuiz.countDocuments({
     quiz_name: { $regex: searchQuery, $options: "i" },
-    _id: trivia_arr,
+    _id: { $in: trivia_arr },
     // sch_time: { $gte: fromDate, $lte: toDate }
   });
-
-
+  console.log(totalData)
   let data2 = await ActiveQuiz.aggregate([
-    {
-      $match: {
-        quiz_name: { $regex: searchQuery, $options: "i" },
-        _id: { $in: trivia_arr }
-      }
-    },
+      // {
+      //   $match: {
+      //     quiz_name: { $regex: searchQuery, $options: "i" },
+      //     _id: { $in: trivia_arr },
+      //   },
+      // },
     {
       $lookup: {
         from: "categories",
-        localField: "category_id",
+        localField: "categoryId",
         foreignField: "_id",
         as: "category",
       },
@@ -418,7 +415,7 @@ let getActiveQuiz = async (req, res, next) => {
     {
       $lookup: {
         from: "subcategories",
-        localField: "sub_cat_id",
+        localField: "subCategoryId",
         foreignField: "_id",
         as: "subcategory",
       },
@@ -432,6 +429,7 @@ let getActiveQuiz = async (req, res, next) => {
         subcategory_name: "$subcategory.sub_category_name",
         quiz_name: 1,
         total_num_of_quest: 1,
+
         entryFees: 1,
         banner: 1,
         sch_time: 1,
@@ -447,8 +445,8 @@ let getActiveQuiz = async (req, res, next) => {
   ]);
 
   const totalPages = Math.ceil(totalData / limit);
-  // console.log(totalPages);
-  // console.log("data2", data2);
+  console.log(totalPages);
+  console.log("data2",data2);
 
 
   for (let i of data2) {
@@ -463,9 +461,12 @@ let getActiveQuiz = async (req, res, next) => {
   });
 };
 
+
+
+
 let viewDetailsofActivequiz = async (req, res, next) => {
   const schema = Joi.object({
-    id: Joi.string().allow("").required(),
+    id: Joi.string().allow(""),
   });
   const { error } = await schema.validateAsync(req.query);
   if (error) {
@@ -474,55 +475,13 @@ let viewDetailsofActivequiz = async (req, res, next) => {
   let { id } = req.query;
   console.log(id);
   // id= new Types.ObjectId(id)
-  // const [data] = await ActiveQuiz.aggregate([
-  //   {
-  //     $match: {
-  //       _id: new mongoose.Types.ObjectId(id),
-  //     },
-  //   },
-
-  //   {
-  //     $lookup: {
-  //       from: "categories",
-  //       localField: "category_id",
-  //       foreignField: "_id",
-  //       as: "category",
-  //     },
-  //   },
-  //   {
-  //     $unwind: "$category",
-  //   },
-  //   {
-  //     $lookup: {
-  //       from: "subcategories",
-  //       localField: "sub_cat_id",
-  //       foreignField: "_id",
-  //       as: "subcategory",
-  //     },
-  //   },
-  //   {
-  //     $unwind: "$subcategory",
-  //   },
-  //   {
-  //     $project: {
-  //       category_name: "$category.category_name",
-  //       subcategory_name: "$subcategory.sub_category_name",
-  //       quiz_name: 1,
-  //       total_num_of_quest: 1,
-  //       min_reward_per: 1,
-  //       reward: 1,
-  //       banner: 1,
-  //       sch_time: 1,
-  //       _id: 1,
-  //     },
-  //   },
-  // ]);
   const [data] = await ActiveQuiz.aggregate([
     {
       $match: {
         _id: new mongoose.Types.ObjectId(id),
       },
     },
+
     {
       $lookup: {
         from: "categories",
@@ -554,20 +513,18 @@ let viewDetailsofActivequiz = async (req, res, next) => {
         min_reward_per: 1,
         reward: 1,
         banner: 1,
-        sch_time:1,
+        sch_time: 1,
         _id: 1,
       },
     },
   ]);
 
-//   const check = await ActiveQuiz.findById(id)
-  
-// console.log(check)
-  console.log(data)
   data.sch_time = moment(data.sch_time).format("DD-MM-YYYY HH:mm");
   console.log(data.sch_time);
   res.send({ status: 1, data });
 };
+
+
 
 var view_history_of_active_quiz = async (req, res) => {
   const schema = Joi.object({
@@ -612,7 +569,6 @@ var view_history_of_active_quiz = async (req, res) => {
 
   ]);
 
-  // return console.log(data2);
 
   for (let i of data2) {
 
@@ -621,698 +577,20 @@ var view_history_of_active_quiz = async (req, res) => {
 
     i.collected = slot_aloted * entryFees;
     i.distributed = Math.ceil(i.collected * 0.80);
-    i.income = i.collected - i.distributed
-
-
+    i.income = i.collected - i.distributed;
+    i.end_time= moment(i.end_time).format("DD-MM-YYYY HH:mm:ss");
+    i.sch_time= moment(i.sch_time).format("DD-MM-YYYY HH:mm:ss");
   }
 
 
 
   res.send({ status: 1, data2 });
 };
-
-var change_category_of_Activequiz = async (req, res, next) => {
-  const schema = Joi.object({
-    quiz_id: Joi.string().required(),
-    category_id: Joi.string().required(),
-    subjects_id: Joi.array().items(Joi.string()).min(1).required(),
-    sub_cat_id: Joi.string().required(),
-    question_composition: Joi.object()
-      .pattern(
-        Joi.string().required(),
-        Joi.number().integer().max(100).min(0).required()
-      )
-      .max(10)
-      .required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  const {
-    quiz_id,
-    category_id,
-    subjects_id,
-    sub_cat_id,
-    question_composition,
-  } = req.body;
-
-  var data = req.body;
-
-  var { total_num_of_quest: numberofquestion } = await ActiveQuiz.findOne({
-    _id: new mongoose.Types.ObjectId(quiz_id),
-  });
-
-  const keys = Object.keys(data.question_composition);
-  console.log(keys);
-  const count = keys.length;
-
-  let check = 0;
-
-  var remain_question = 0;
-
-  var question = [];
-
-  var ans = [];
-  console.log(data.question_composition);
-
-  var check_pers = 0;
-
-  for (let i in data.question_composition) {
-    const persentage = data.question_composition[i];
-
-    check_pers += data.question_composition[i];
-  }
-
-  console.log(check_pers, "check pers");
-  console.log(check_pers == 100, "ck cond");
-
-  if (check_pers == 100) {
-    console.log("next");
-  } else {
-    throw new CreateError(
-      "CustomError",
-      `total persent is ${check_pers} make sure you persent will 100`
-    );
-  }
-
-  for (let i in data.question_composition) {
-    console.log(i);
-    check++;
-
-    const persentage = data.question_composition[i];
-
-    // console.log(persentage);
-    var single_tag_quest = Math.floor((persentage / 100) * numberofquestion);
-
-    remain_question += single_tag_quest;
-
-    if (check == count) {
-      const data = numberofquestion - remain_question;
-
-      single_tag_quest += data;
-    }
-
-    const ques = await Question.find({
-      sub_id: new mongoose.Types.ObjectId(i),
-      is_del: 0,
-    });
-
-    const { sub_name: topic_name } = await Subject.findOne({
-      _id: new mongoose.Types.ObjectId(i),
-    });
-
-    console.log(single_tag_quest, topic_name);
-
-    que_len = ques.length;
-
-    if (que_len < single_tag_quest) {
-      throw new CreateError(
-        "CustomError",
-        `${topic_name} has tag has not sufficient question`
-      );
-    }
-
-    const que = await Question.aggregate([
-      { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
-      { $sample: { size: single_tag_quest } },
-    ]);
-
-    for (let i of que) {
-      question = [...question, i._id];
-      ans = [...ans, i.ans];
-    }
-
-    if (question.length !== ans.length) {
-      throw new CreateError(
-        "CustomError",
-        "question array and answer array is not same"
-      );
-    }
-  }
-
-  await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(quiz_id) },
-    { $set: { category_id, subjects_id, sub_cat_id, question_composition } }
-  );
-};
-
-var change_subcategory_of_quiz = async (req, res, next) => {
-  const schema = Joi.object({
-    quiz_id: Joi.string().required(),
-
-    subjects_id: Joi.array().items(Joi.string()).min(1).required(),
-    sub_cat_id: Joi.string().required(),
-    question_composition: Joi.object()
-      .pattern(
-        Joi.string().required(),
-        Joi.number().integer().max(100).min(0).required()
-      )
-      .max(10)
-      .required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  const { quiz_id, subjects_id, sub_cat_id, question_composition } = req.body;
-
-  var data = req.body;
-
-  var { total_num_of_quest: numberofquestion } = await ActiveQuiz.findOne({
-    _id: new mongoose.Types.ObjectId(quiz_id),
-  });
-
-  const keys = Object.keys(data.question_composition);
-  console.log(keys);
-  const count = keys.length;
-
-  let check = 0;
-
-  var remain_question = 0;
-
-  var question = [];
-
-  var ans = [];
-  console.log(data.question_composition);
-
-  var check_pers = 0;
-
-  for (let i in data.question_composition) {
-    const persentage = data.question_composition[i];
-
-    check_pers += data.question_composition[i];
-  }
-
-  console.log(check_pers, "check pers");
-  console.log(check_pers == 100, "ck cond");
-
-  if (check_pers == 100) {
-    console.log("next");
-  } else {
-    throw new CreateError(
-      "CustomError",
-      `total persent is ${check_pers} make sure you persent will 100`
-    );
-  }
-
-  for (let i in data.question_composition) {
-    console.log(i);
-    check++;
-
-    const persentage = data.question_composition[i];
-
-    // console.log(persentage);
-    var single_tag_quest = Math.floor((persentage / 100) * numberofquestion);
-
-    remain_question += single_tag_quest;
-
-    if (check == count) {
-      const data = numberofquestion - remain_question;
-
-      single_tag_quest += data;
-    }
-
-    const ques = await Question.find({
-      sub_id: new mongoose.Types.ObjectId(i),
-      is_del: 0,
-    });
-
-    const { sub_name: topic_name } = await Subject.findOne({
-      _id: new mongoose.Types.ObjectId(i),
-    });
-
-    console.log(single_tag_quest, topic_name);
-
-    que_len = ques.length;
-
-    if (que_len < single_tag_quest) {
-      throw new CreateError(
-        "CustomError",
-        `${topic_name} has tag has not sufficient question`
-      );
-    }
-
-    const que = await Question.aggregate([
-      { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
-      { $sample: { size: single_tag_quest } },
-    ]);
-
-    for (let i of que) {
-      question = [...question, i._id];
-      ans = [...ans, i.ans];
-    }
-
-    if (question.length !== ans.length) {
-      throw new CreateError(
-        "CustomError",
-        "question array and answer array is not same"
-      );
-    }
-  }
-
-  await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(quiz_id) },
-    { $set: { subjects_id, sub_cat_id, question_composition } }
-  );
-};
-var change_subject_for_quiz = async (req, res, next) => {
-  const schema = Joi.object({
-    quiz_id: Joi.string().required(),
-
-    subjects_id: Joi.array().items(Joi.string()).min(1).required(),
-
-    question_composition: Joi.object()
-      .pattern(
-        Joi.string().required(),
-        Joi.number().integer().max(100).min(0).required()
-      )
-      .max(10)
-      .required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  const { quiz_id, subjects_id, question_composition } = req.body;
-
-  var data = req.body;
-
-  var { total_num_of_quest: numberofquestion } = await ActiveQuiz.findOne({
-    _id: new mongoose.Types.ObjectId(quiz_id),
-  });
-
-  const keys = Object.keys(data.question_composition);
-  console.log(keys);
-  const count = keys.length;
-
-  let check = 0;
-
-  var remain_question = 0;
-
-  var question = [];
-
-  var ans = [];
-  console.log(data.question_composition);
-
-  var check_pers = 0;
-
-  for (let i in data.question_composition) {
-    const persentage = data.question_composition[i];
-
-    check_pers += data.question_composition[i];
-  }
-
-  console.log(check_pers, "check pers");
-  console.log(check_pers == 100, "ck cond");
-
-  if (check_pers == 100) {
-    console.log("next");
-  } else {
-    throw new CreateError(
-      "CustomError",
-      `total persent is ${check_pers} make sure you persent will 100`
-    );
-  }
-
-  for (let i in data.question_composition) {
-    console.log(i);
-    check++;
-
-    const persentage = data.question_composition[i];
-
-    // console.log(persentage);
-    var single_tag_quest = Math.floor((persentage / 100) * numberofquestion);
-
-    remain_question += single_tag_quest;
-
-    if (check == count) {
-      const data = numberofquestion - remain_question;
-
-      single_tag_quest += data;
-    }
-
-    const ques = await Question.find({
-      sub_id: new mongoose.Types.ObjectId(i),
-      is_del: 0,
-    });
-
-    const { sub_name: topic_name } = await Subject.findOne({
-      _id: new mongoose.Types.ObjectId(i),
-    });
-
-    console.log(single_tag_quest, topic_name);
-
-    que_len = ques.length;
-
-    if (que_len < single_tag_quest) {
-      throw new CreateError(
-        "CustomError",
-        `${topic_name} has tag has not sufficient question`
-      );
-    }
-
-    const que = await Question.aggregate([
-      { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
-      { $sample: { size: single_tag_quest } },
-    ]);
-
-    for (let i of que) {
-      question = [...question, i._id];
-      ans = [...ans, i.ans];
-    }
-
-    if (question.length !== ans.length) {
-      throw new CreateError(
-        "CustomError",
-        "question array and answer array is not same"
-      );
-    }
-  }
-
-  await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(quiz_id) },
-    { $set: { subjects_id, question_composition } }
-  );
-};
-
-var change_no_question_for_quiz = async (req, res, next) => {
-  const schema = Joi.object({
-    quiz_id: Joi.string().required(),
-    numberofquestion: Joi.number().integer().required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  const { quiz_id, numberofquestion } = req.body;
-
-  var data = req.body;
-
-  var { question_composition } = await ActiveQuiz.findOne({
-    _id: new mongoose.Types.ObjectId(quiz_id),
-  });
-
-  data.question_composition = question_composition;
-
-  const keys = Object.keys(data.question_composition);
-  console.log(keys);
-  const count = keys.length;
-
-  let check = 0;
-
-  var remain_question = 0;
-
-  var question = [];
-
-  var ans = [];
-  console.log(data.question_composition);
-
-  var check_pers = 0;
-
-  for (let i in data.question_composition) {
-    const persentage = data.question_composition[i];
-
-    check_pers += data.question_composition[i];
-  }
-
-  console.log(check_pers, "check pers");
-  console.log(check_pers == 100, "ck cond");
-
-  if (check_pers == 100) {
-    console.log("next");
-  } else {
-    throw new CreateError(
-      "CustomError",
-      `total persent is ${check_pers} make sure you persent will 100`
-    );
-  }
-
-  for (let i in data.question_composition) {
-    console.log(i);
-    check++;
-
-    const persentage = data.question_composition[i];
-
-    // console.log(persentage);
-    var single_tag_quest = Math.floor((persentage / 100) * numberofquestion);
-
-    remain_question += single_tag_quest;
-
-    if (check == count) {
-      const data = numberofquestion - remain_question;
-
-      single_tag_quest += data;
-    }
-
-    const ques = await Question.find({
-      sub_id: new mongoose.Types.ObjectId(i),
-      is_del: 0,
-    });
-
-    const { sub_name: topic_name } = await Subject.findOne({
-      _id: new mongoose.Types.ObjectId(i),
-    });
-
-    console.log(single_tag_quest, topic_name);
-
-    que_len = ques.length;
-
-    if (que_len < single_tag_quest) {
-      throw new CreateError(
-        "CustomError",
-        `${topic_name} has tag has not sufficient question`
-      );
-    }
-
-    const que = await Question.aggregate([
-      { $match: { sub_id: new mongoose.Types.ObjectId(i), is_del: 0 } },
-      { $sample: { size: single_tag_quest } },
-    ]);
-
-    for (let i of que) {
-      question = [...question, i._id];
-      ans = [...ans, i.ans];
-    }
-
-    if (question.length !== ans.length) {
-      throw new CreateError(
-        "CustomError",
-        "question array and answer array is not same"
-      );
-    }
-  }
-
-  await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(quiz_id) },
-    { $set: { total_num_of_quest: numberofquestion } }
-  );
-};
-
-
-let chnageBanner = async (req, res, next) => {
-  const schema = Joi.object({
-    id: Joi.string().required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  let file_access = req.file;
-  let { id } = req.body;
-
-  if (!req.file) {
-    throw new CreateError("FileUploadError", "upload the banner for the quiz");
-  }
-
-  var blobName = "img/" + Date.now() + "-" + file_access.originalname;
-
-  const sen2 = JSON.stringify({ blobName, file_access });
-  var channel = await connectToRabbitMQ();
-
-  channel.sendToQueue("upload_public_azure", Buffer.from(sen2));
-  console.log("send to queue");
-
-  const update = await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(id) },
-    { banner: blobName }
-  );
-  res.send({ status: 1, message: "successfuly updated" });
-};
-
-let changeRules = async (req, res, next) => {
-  const schema = Joi.object({
-    id: Joi.string().required(),
-    rules: Joi.array().required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  let { id, rules } = req.body;
-
-  const update = await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(id) },
-    { rules: rules }
-  );
-  return res.send({ status: 1, message: "successfuly updated" });
-};
-
-let updateEntryFees = async (req, res, next) => {
-  const schema = Joi.object({
-    id: Joi.string().required(),
-    entryFees: Joi.number().max(500).required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  let { id, entryFees } = req.body;
-
-  const update = await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(id) },
-    { entryFees }
-  );
-  return res.send({ status: 1, message: "successfuly updated" });
-};
-let changeTimePerQues = async (req, res, next) => {
-  const schema = Joi.object({
-    id: Joi.string().required(),
-    time_per_question: Joi.number().required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  let { id, time_per_question } = req.body;
-
-  const update = await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(id) },
-    { time_per_question }
-  );
-  return res.send({ status: 1, message: "successfuly updated" });
-};
-
-let updateStatus = async (req, res, next) => {
-  const schema = Joi.object({
-    id: Joi.string().required(),
-    repeat: Joi.string()
-      .valid(
-        "never",
-        "5 mins",
-        "15 mins",
-        "30 mins",
-        "45 mins",
-        "1 hrs",
-        "2 hrs",
-        "3 hrs",
-        "6 hrs",
-        "1 days",
-        "2 days",
-        "3 days",
-        "1 week",
-        "2 week",
-        "1 month",
-        "2 month",
-        "3 month",
-        "6 month",
-        "1 year"
-      )
-      .required(),
-  });
-
-  const { error } = await schema.validateAsync(req.body);
-
-  let { id, repeat } = req.body;
-
-  const update = await ActiveQuiz.updateOne(
-    { _id: new mongoose.Types.ObjectId(id) },
-    { repeat }
-  );
-  return res.send({ status: 1, message: "successfuly updated" });
-};
-
-var view_winner_and_participants_of_subtrivia = async (req, res, next) => {
-  const schema = Joi.object({
-    subactive_quiz_id: Joi.string().required(),
-  });
-
-
-  const { error } = await schema.validateAsync(req.body);
-
-  var { subactive_quiz_id } = req.body;
-
-  var rewardedParticipants = await Result_Active_quiz.aggregate([
-    {
-      $match: {
-        subtrivia_id: new mongoose.Types.ObjectId(subactive_quiz_id),
-        reward: { $ne: 0 }
-      },
-    },
-    {
-      $group: {
-        _id: "$participant_id",
-      },
-    },
-  ]);
-
-  // Get the participant IDs whose reward is equal to 0
-  var nonRewardedParticipants = await Result_Active_quiz.aggregate([
-    {
-      $match: {
-        subtrivia_id: new mongoose.Types.ObjectId(subactive_quiz_id),
-        reward: 0
-      },
-    },
-    {
-      $group: {
-        _id: "$participant_id",
-      },
-    },
-  ]);
-
-  // Get participant details for rewarded participants
-  const rewardedParticipantDetails = await participantModel.find({
-    _id: { $in: rewardedParticipants.map((p) => p._id) },
-  });
-
-  // Get participant details for non-rewarded participants
-  const nonRewardedParticipantDetails = await participantModel.find({
-    _id: { $in: nonRewardedParticipants.map((p) => p._id) },
-  });
-
-  // Extract participant names
-  const rewardedParticipantNames = rewardedParticipantDetails.map(
-    (p) => p.name
-  );
-  const nonRewardedParticipantNames = nonRewardedParticipantDetails.map(
-    (p) => p.name
-  );
-
-  console.log("Rewarded Participants:", rewardedParticipantNames);
-  console.log("Non-Rewarded Participants:", nonRewardedParticipantNames);
-
-  res.send({ status: 1, winners: rewardedParticipantNames, participants: nonRewardedParticipantNames });
-};
-
 createActiveQuiz = trycatch(createActiveQuiz)
 getActiveQuiz = trycatch(getActiveQuiz)
 viewDetailsofActivequiz = trycatch(viewDetailsofActivequiz)
 view_history_of_active_quiz = trycatch(view_history_of_active_quiz)
-change_category_of_Activequiz = trycatch(change_category_of_Activequiz)
-change_subcategory_of_quiz = trycatch(change_subcategory_of_quiz)
-change_subject_for_quiz = trycatch(change_subject_for_quiz)
-change_no_question_for_quiz = trycatch(change_no_question_for_quiz)
-changeRules = trycatch(changeRules)
-chnageBanner = trycatch(chnageBanner)
-updateEntryFees = trycatch(updateEntryFees)
-changeTimePerQues = trycatch(changeTimePerQues)
-updateStatus = trycatch(updateStatus)
 
 module.exports = {
-  getActiveQuiz,
-  createActiveQuiz,
-  viewDetailsofActivequiz,
-  view_history_of_active_quiz,
-  change_category_of_Activequiz,
-  change_subcategory_of_quiz,
-  change_subject_for_quiz,
-  change_no_question_for_quiz,
-  chnageBanner,
-  changeRules,
-  updateStatus,
-  changeTimePerQues,
-  updateEntryFees
+  getActiveQuiz, createActiveQuiz, viewDetailsofActivequiz, view_history_of_active_quiz
 }
