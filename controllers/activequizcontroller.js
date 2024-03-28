@@ -466,7 +466,7 @@ let getActiveQuiz = async (req, res, next) => {
 
 let viewDetailsofActivequiz = async (req, res, next) => {
   const schema = Joi.object({
-    id: Joi.string().allow(""),
+    id: Joi.string().allow("").required(),
   });
   const { error } = await schema.validateAsync(req.query);
   if (error) {
@@ -475,17 +475,59 @@ let viewDetailsofActivequiz = async (req, res, next) => {
   let { id } = req.query;
   console.log(id);
   // id= new Types.ObjectId(id)
+  // const [data] = await ActiveQuiz.aggregate([
+  //   {
+  //     $match: {
+  //       _id: new mongoose.Types.ObjectId(id),
+  //     },
+  //   },
+
+  //   {
+  //     $lookup: {
+  //       from: "categories",
+  //       localField: "category_id",
+  //       foreignField: "_id",
+  //       as: "category",
+  //     },
+  //   },
+  //   {
+  //     $unwind: "$category",
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "subcategories",
+  //       localField: "sub_cat_id",
+  //       foreignField: "_id",
+  //       as: "subcategory",
+  //     },
+  //   },
+  //   {
+  //     $unwind: "$subcategory",
+  //   },
+  //   {
+  //     $project: {
+  //       category_name: "$category.category_name",
+  //       subcategory_name: "$subcategory.sub_category_name",
+  //       quiz_name: 1,
+  //       total_num_of_quest: 1,
+  //       min_reward_per: 1,
+  //       reward: 1,
+  //       banner: 1,
+  //       sch_time: 1,
+  //       _id: 1,
+  //     },
+  //   },
+  // ]);
   const [data] = await ActiveQuiz.aggregate([
     {
       $match: {
         _id: new mongoose.Types.ObjectId(id),
       },
     },
-
     {
       $lookup: {
         from: "categories",
-        localField: "category_id",
+        localField: "categoryId",
         foreignField: "_id",
         as: "category",
       },
@@ -513,12 +555,16 @@ let viewDetailsofActivequiz = async (req, res, next) => {
         min_reward_per: 1,
         reward: 1,
         banner: 1,
-        sch_time: 1,
+        sch_time:1,
         _id: 1,
       },
     },
   ]);
 
+  const check = await ActiveQuiz.findById(id)
+  
+console.log(check)
+  console.log(data)
   data.sch_time = moment(data.sch_time).format("DD-MM-YYYY HH:mm");
   console.log(data.sch_time);
   res.send({ status: 1, data });
