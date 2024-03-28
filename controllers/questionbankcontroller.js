@@ -66,7 +66,37 @@ var add_subject = async (req, res, next) => {
 }
 
 
+
+var get_all_subjects = async(req,res,next)=>{
+  const schema = Joi.object({
+    search: Joi.string().max(50).allow('').required(),
+    
+
+  });
+
+
+  const { error } = await schema.validateAsync(req.query);
+
+  const { search } = req.query
+
+  // Define the search filter
+  const searchFilter = {
+    sub_name: { $regex: new RegExp(search, "i") } // Case-insensitive search
+};
+
+
+
+// Fetch all subjects from the subjects collection
+const subjects = await Subject.find(searchFilter);
+        
+res.json({ status: 1, subjects: subjects });
+
+
+
+}
+
 var view_subjects = async (req, res, next) => {
+
   // res.send("d")
   const schema = Joi.object({
     page: Joi.number().integer().allow(0).required(),
@@ -90,7 +120,7 @@ var view_subjects = async (req, res, next) => {
 
   // Count total categories for pagination
   const totalsubjects = await Subject.countDocuments(searchFilter);
-  console.log("searchResults",totalsubjects)
+  console.log("searchResults", totalsubjects)
   // Calculate total pages
   const totalPages = Math.ceil(totalsubjects / limit);
   console.log("total_page", totalPages)
@@ -310,9 +340,9 @@ var insert_single_question = async (req, res, next) => {
 
     const updated_time = moment().valueOf();
 
-    const question = new Question({ question, sub_id, is_ques_img: 0, is_opt_img, option1: req.body.option1, option2: req.body.option2, option3: req.body.option3, option4: req.body.option4, question_url: "", ans, update_time: updated_time });
+    const newquestion = new Question({ question, sub_id, is_ques_img: 0, is_opt_img, option1: req.body.option1, option2: req.body.option2, option3: req.body.option3, option4: req.body.option4, question_url: "", ans, update_time: updated_time });
 
-    await question.save();
+    await newquestion.save();
 
 
 
@@ -762,12 +792,12 @@ var get_questions_in_subject = async (req, res, next) => {
 
   const { sub_id } = req.body;
 
-  const questions = await Question.find({ sub_id: new mongoose.Types.ObjectId(sub_id) });
-  if(questions.length == 0){
-    res.send({status : 1 ,  message : "No question available for this subject"})
+  const questions = await Question.find({ sub_id: new mongoose.Types.ObjectId(sub_id) ,is_del:0});
+  if (questions.length == 0) {
+    res.send({ status: 1, message: "No question available for this subject" })
   }
-  else{
-    res.send({ status: 1, questions })
+  else {
+    res.send({ status: 1, total_questions: questions.length, questions })
   }
 }
 
@@ -777,7 +807,7 @@ var del_question = async (req, res, next) => {
 
   });
   const { error } = await schema.validateAsync(req.body);
-  
+
   const { que_id } = req.body
   console.log(que_id)
 
@@ -807,5 +837,7 @@ add_bulk_question = trycatch(add_bulk_question)
 del_question = trycatch(del_question)
 get_questions_in_subject = trycatch(get_questions_in_subject)
 
+get_all_subjects = trycatch(get_all_subjects)
 
-module.exports = { del_question, get_questions_in_subject, add_subject, view_subjects, insert_single_question, add_bulk_question, update_category_of_subject, view_edit_page_for_subject, delete_new_subcategory, insert_new_subcategory }
+
+module.exports = { del_question, get_questions_in_subject, add_subject, view_subjects, insert_single_question, add_bulk_question, update_category_of_subject, view_edit_page_for_subject, delete_new_subcategory, insert_new_subcategory ,get_all_subjects}

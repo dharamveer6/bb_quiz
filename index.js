@@ -12,8 +12,8 @@ const { azurestreamroute } = require('./routes/azurestreamroutes');
 const { formfillroutes } = require('./routes/formfillroutes');
 const { triviaRoute } = require('./routes/triviaQuizzRoutes');
 const { quizRoute } = require('./routes/quizRoutes');
-const { studymaterialRoute } = require('./routes/studymaterialroutes');
-const { dailyupdateRoute } = require('./routes/dailyupdateroutes');
+
+const { triviastudentrouter } = require('./routes/studenttriviarouter');
 
 const app = express();
 
@@ -40,9 +40,8 @@ app.use('/questionbank', questionbankRoute);
 app.use('/formfill', formfillroutes)
 app.use('/stream', azurestreamroute)
 app.use('/trivia', triviaRoute)
+app.use('/student/trivia',triviastudentrouter)
 app.use('/active/quiz', quizRoute)  
-app.use('/study', studymaterialRoute)  
-app.use('/updates', dailyupdateRoute)  
 
 
 

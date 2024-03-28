@@ -1,21 +1,67 @@
-const Joi = require('joi');
-const { trycatch } = require('../utils/tryCatch');
-
-const { connectToRabbitMQ } = require('../rabbit_config');
-const Question = require('../models/questionmodel');
-const {  mongoose } = require('mongoose');
-const Subject = require('../models/subjectmodel');
-const TriviaQuiz = require('../models/triviaModel');
-const SubTriviaQuiz = require('../models/subtriviamodel');
-const { CreateError } = require('../utils/create_err');
-const {moment}=require("../utils/timezone.js");
-const Result_Subtrivia = require('../models/result_subtrivia.js');
+const { default: mongoose } = require("mongoose");
+const SubActiveQuiz = require("../models/subActiveModel");
+const participantModel = require("../models/participantModel");
+const Result_Active_quiz = require("../models/result_subactivemodel");
+const { increaseTime } = require("../utils/increase_time");
 
 
-
-var join_quiz_by_student=async(req,res,next)=>{
+var registor_to_active_quiz=async(req,res,next)=>{
     const schema = Joi.object({
-      subtrivia_id: Joi.string().max(250).required(),
+        subactivequiz_id: Joi.string().max(250).required(),
+          participant_id: Joi.string().required(),
+  
+  
+      });
+  
+      const { error } = await schema.validateAsync(req.body);
+
+      const{subactivequiz_id,participant_id}=req.body
+
+      const {entryFees,slot_aloted,slots}=await SubActiveQuiz.findOne({_id:new mongoose.Types.ObjectId(subactivequiz_id)});
+      const {wallet}=await participantModel.findOne({_id:new mongoose.Types.ObjectId(participant_id)});
+
+      if(slot_aloted==slots){
+        throw new CreateError("CustomError", "slots is full");
+      }
+
+      if(wallet<entryFees){
+        throw new CreateError("CustomError", "you do not have the sufficent balance");
+      }
+      else{
+
+        const newbalance=wallet-entryFees
+        await participantModel.updateOne(
+            { _id: new mongoose.Types.ObjectId(participant_id) },
+            { $set: { wallet:newbalance} }
+          );
+        await SubActiveQuiz.updateOne(
+            { _id: new mongoose.Types.ObjectId(subactivequiz_id) },
+            { $inc: { slot_aloted: 1 } }
+          );
+        };
+
+
+        const result_active_quiz = new Result_Active_quiz({ SubActive_id:subactivequiz_id,participant_id:participant_id});
+        await result_active_quiz.save();
+
+
+        res.send({status:1,msg:"user registor succesfully"})
+
+
+
+
+       
+
+          
+      
+
+
+}
+
+
+var join_Activequiz_by_student=async(req,res,next)=>{
+    const schema = Joi.object({
+        subactivequiz_id: Joi.string().max(250).required(),
         participant_id: Joi.string().required(),
 
 
@@ -23,10 +69,36 @@ var join_quiz_by_student=async(req,res,next)=>{
 
     const { error } = await schema.validateAsync(req.body);
 
-    const { subtrivia_id, participant_id } = req.body;
+    const { subactivequiz_id, participant_id } = req.body;
 
-    const data=await SubTriviaQuiz.findOne({
-        _id: new mongoose.Types.ObjectId(subtrivia_id),
+    const val1=await Result_Active_quiz.findOne({ SubActive_id:subactivequiz_id,participant_id:participant_id});
+    if(!val1){
+        throw new CreateError("CustomError", "you have not registored in quiz");
+    }
+
+    const {sch_time}=await SubActiveQuiz.findOne({_id:new mongoose.Types.ObjectId(subactivequiz_id)});
+
+    const currentTimestamp = moment().valueOf();
+
+    var increases_time=increaseTime(start_time,"5 mins");
+
+    if(currentTimestamp >=sch_time && currentTimestamp<=increases_time){
+
+    }
+    else{
+        throw new CreateError("CustomError", "you have exced the time period");
+    }
+
+
+
+
+
+
+
+
+
+    const data=await SubActiveQuiz.findOne({
+        _id: new mongoose.Types.ObjectId(subactivequiz_id),
       });
 
       let count=0
@@ -162,8 +234,8 @@ const secondsToAdd = (data.total_num_of_quest*data.time_per_question)+30; // Cha
 const end_time = moment(start_time).add(secondsToAdd, 'seconds').valueOf();
 
 
-const result = await Result_Subtrivia.findOneAndUpdate(
-    { participant_id: participant_id, subtrivia_id: subtrivia_id },
+const result = await Result_Active_quiz.findOneAndUpdate(
+    { participant_id: participant_id, SubActive_id: subactivequiz_id },
     { $set: {stu_ans,is_attempted:1, end_time: end_time, start_time: start_time, cor_ans: ans, questions: question,participant_id: participant_id, subtrivia_id: subtrivia_id ,stu_ans,submit_time_period:secondsToAdd} },
     { upsert: true, new: true }
 );
@@ -191,10 +263,11 @@ res.send({status:1,que,timeperiod:secondsToAdd,stu_ans})
 }
 
 
-var submmit_triviaquiz=async(req,res,next)=>{
+
+var submmit_activequiz=async(req,res,next)=>{
 
     const schema = Joi.object({
-        subtrivia_id:Joi.string().required(),
+        subactive_id:Joi.string().required(),
         participant_id:Joi.string().required(),
         submit_time_period:Joi.number().integer().positive().min(1).required(),
         stu_ans: Joi.array().items(Joi.number().integer().min(-1).max(4)).required(),
@@ -210,10 +283,10 @@ var submmit_triviaquiz=async(req,res,next)=>{
     if(error){
         throw new CreateError("ValidationError",error.details[0].message)
       }
-      var { subtrivia_id,participant_id, stu_ans,submit_time_period} = req.body;
+      var { subactive_id,participant_id, stu_ans,submit_time_period} = req.body;
   
-      var {total_num_of_quest:numberofquestion,min_reward_per:passingpersentage,reward}=await SubTriviaQuiz.findOne({_id:new mongoose.Types.ObjectId(subtrivia_id)})
-      var {end_time,cor_ans}=await Result_Subtrivia.findOne({subtrivia_id:new mongoose.Types.ObjectId(subtrivia_id),participant_id:new mongoose.Types.ObjectId(participant_id)})
+      var {total_num_of_quest:numberofquestion}=await SubActiveQuiz.findOne({_id:new mongoose.Types.ObjectId(subactive_id)})
+      var {end_time,cor_ans}=await Result_Subtrivia.findOne({SubActive_id:new mongoose.Types.ObjectId(subactive_id),participant_id:new mongoose.Types.ObjectId(participant_id)})
   
       const cur_time = moment().valueOf(); // Get the current time i
   
@@ -257,12 +330,12 @@ var submmit_triviaquiz=async(req,res,next)=>{
   
       const persentage = Math.floor((marks / totalmarks) * 100);
       
-      if (persentage >= passingpersentage) {
+   
         
 
-        await Result_Subtrivia.updateOne(
-            { subtrivia_id:new mongoose.Types.ObjectId(subtrivia_id),participant_id:new mongoose.Types.ObjectId(participant_id)},
-            { $set: { stu_ans,marks,reward,obtain_persentage:persentage,submit_time_period} }
+        await Result_Active_quiz.updateOne(
+            { SubActive_id:new mongoose.Types.ObjectId(subactive_id),participant_id:new mongoose.Types.ObjectId(participant_id)},
+            { $set: { stu_ans,marks,reward:0,obtain_persentage:persentage,submit_time_period} }
           )
    
 
@@ -276,27 +349,8 @@ var submmit_triviaquiz=async(req,res,next)=>{
           unattempt,
           submit_time_period,is_attemped:1}
         });
-      } else {
-       
-        await Result_Subtrivia.updateOne(
-            { subtrivia_id:new mongoose.Types.ObjectId(subtrivia_id),participant_id:new mongoose.Types.ObjectId(participant_id)},
-            { $set: { stu_ans,marks,reward:0,obtain_persentage:persentage,submit_time_period} }
-          )
-     return  res.send({
-          status:1,
-          arr:{ correct,
-            incorrect,
-            unattempt,
-            submit_time_period,is_attemped:1}
-         
-        });
-      }
+     
 
 }
-
-join_quiz_by_student=trycatch(join_quiz_by_student);
-submmit_triviaquiz=trycatch(submmit_triviaquiz);
-
-module.exports={join_quiz_by_student,submmit_triviaquiz}
 
 

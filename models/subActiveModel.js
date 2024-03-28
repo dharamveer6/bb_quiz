@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const ActiveQuizSchema = new Schema(
+const SubActiveQuizSchema = new Schema(
     {
-        quiz_name: { type: String },
-        category_id: {
+   
+        categoryId: {
             type: Schema.Types.ObjectId,
             ref: 'categories'
         },
@@ -11,37 +11,62 @@ const ActiveQuizSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'subcategories'
         },
-        Active_Quiz_Id: {
-            type: Schema.Types.ObjectId,
-            ref: 'quizzes'
-        },
-        subjects_id: {
+        subject_id: {
             type: Array,
             items: {
                 type: Schema.Types.ObjectId,
                 ref: 'subjects'
             }
         },
-        question_composition: {
+        slots: { type: Number },
+        entryFees: { type: Number },
+        question_composition:{
             type: Map,
             of: Number,
-             ref: 'subjects',
-            // Reference to the 'subjects' collection
+            ref: 'Subject' // Reference to the 'subjects' collection
         },
-        totalQuestions: { type: Number },
-        timePerQuestion: { type: Number },
-        scheduleDateTime: { type: Date },
-        createdDate: { type: Date },
-        image: { type: String },
-        quiz_repeat : { type: String },
-        total_slots: { type: Number },
-        rules: { type: Array },
-        entryFees: { type: Number }
+        total_num_of_quest: {
+            type: Number
+        },
+        time_per_question: {
+            type: Number
+        },
 
+
+        sch_time: {
+            type: Number
+        },
+        end_time: {
+            type: Number
+        },
+        slot_aloted: {
+            type: Number,default:0
+        },
+        rules:{
+            type:Array
+        },
+        banner:
+        {
+            type:String
+        },
+        quiz_name:
+        {
+            type:String
+        },
+        repeat:
+        {
+            type:String
+        },
+        Active_Quiz_Id: {
+            type: Schema.Types.ObjectId,
+            ref: 'ActiveQuizes'
+        }
+       
     }
 
 )
 
-const SubActiveQuiz = mongoose.model('SubActiveQuiz', ActiveQuizSchema);
+const SubActiveQuiz = mongoose.model('SubActiveQuiz', SubActiveQuizSchema);
 
-module.exports = {SubActiveQuiz};
+module.exports = SubActiveQuiz;
+

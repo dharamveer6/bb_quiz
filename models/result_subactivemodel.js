@@ -3,10 +3,10 @@ const Schema = mongoose.Schema;
 
 
 
-const Result_Subtrivias = new Schema({
-    subtrivia_id: {
+const Result_Active_quizs = new Schema({
+    SubActive_id: {
         type: Schema.Types.ObjectId,
-        ref: 'SubTriviaQuiz'
+        ref: 'ActiveQuiz'
     },
     participant_id: {
         type: Schema.Types.ObjectId,
@@ -19,12 +19,13 @@ const Result_Subtrivias = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'Question'
         },
+        default:[]
     },
-    cor_ans:{ type: Array },
-    stu_ans:{ type: Array },
-    start_time: { type: Number },
-    end_time: { type: Number },
-    submit_time_period: { type: Number },
+    cor_ans:{ type: Array , default:[]},
+    stu_ans:{ type: Array , default:[]},
+    start_time: { type: Number,default:0 },
+    end_time: { type: Number,default:0 },
+    submit_time_period: { type: Number ,default:0},
     reward: { type: Number,default:0 },
     obtain_persentage: { type: Number,default:0 },
     marks: { type: Number,default:0 },
@@ -33,6 +34,6 @@ const Result_Subtrivias = new Schema({
     
 });
 
-const Result_Subtrivia = mongoose.model('Result_Subtrivia', Result_Subtrivias);
+const Result_Active_quiz = mongoose.model('Result_Active_quiz', Result_Active_quizs);
 
-module.exports = Result_Subtrivia;
+module.exports = Result_Active_quiz;

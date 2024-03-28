@@ -18,7 +18,7 @@ var addCategory = async (req, res, next) => {
 
     });
 
-    const { error } = await schema.validateAsync(req.body);
+    const { error } = await schema.validateAsync(req.body); 
 
     const { sub_categories, category_name } = req.body;
     // console.log(typeof(sub_categories))
