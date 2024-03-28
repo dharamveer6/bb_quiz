@@ -574,4 +574,8 @@ var view_history_of_active_quiz = async (req, res) => {
   
     res.send({ status: 1, data2 });
   };
+
+  getActiveQuiz=trycatch(getActiveQuiz)
+
+  module.exports={getActiveQuiz}
   
